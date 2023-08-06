@@ -3,19 +3,14 @@
 
 name: ghg-online
 
-on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-  workflow_dispatch: # manual trigger
-    
+on: [ push, pull_request, workflow_dispatch ]
+
 jobs:
   build:
     strategy:
       matrix:
         platform: [ windows-2019, ubuntu-20.04, macos-11 ]
-        dotnet-version: [ 6.0.x, 7.0.x ]
+        dotnet-version: [ 7.0.x ] # ghg-online requires .net 7
 
     runs-on: ${{ matrix.platform }}
 
