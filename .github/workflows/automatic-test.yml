@@ -1,0 +1,28 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: ghg-online
+
+on: [ push, pull_request, workflow_dispatch ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ windows-2019, ubuntu-20.04, macos-11 ]
+        dotnet-version: [ 7.0.x ] # ghg-online requires .net 7
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
