@@ -1,17 +1,17 @@
-using client.Services;
+﻿// See https://aka.ms/new-console-template for more information
 
-var builder = WebApplication.CreateBuilder(args);
+using Grpc.Net.Client;
+using server;
 
-// Additional configuration is required to successfully run gRPC on macOS.
-// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
+// from http://duoduokou.com/csharp/64085357176954393069.html
+// disable ssl certificate validation
+var httpClientHandler = new HttpClientHandler();
+httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+var httpClient = new HttpClient(httpClientHandler);
 
-// Add services to the container.
-builder.Services.AddGrpc();
+// connect to server, port = 2333, using https without ssl certificate validation
+var channel = GrpcChannel.ForAddress("https://127.0.0.1:2333", new GrpcChannelOptions() { HttpClient = httpClient });
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-app.MapGrpcService<GreeterService>();
-app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-
-app.Run();
+var client = new Greeter.GreeterClient(channel);
+var response = await client.SayHelloAsync(new HelloRequest { Name = "GreeterClient" }).ResponseAsync;
+Console.WriteLine($"Server reply: {response.Message}");
