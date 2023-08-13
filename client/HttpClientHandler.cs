@@ -6,6 +6,28 @@ using System.Threading.Tasks;
 
 namespace client
 {
+    class HttpClientHandlerForceVersionPolicy : System.Net.Http.HttpClientHandler
+    {
+        private readonly HttpVersionPolicy _policy;
+
+        public HttpClientHandlerForceVersionPolicy(HttpVersionPolicy policy)
+        {
+            _policy = policy;
+        }
+
+        protected override System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> SendAsync(System.Net.Http.HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        {
+            request.VersionPolicy = _policy;
+            return base.SendAsync(request, cancellationToken);
+        }
+
+        protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.VersionPolicy = _policy;
+            return base.Send(request, cancellationToken);
+        }
+    }
+
     class HttpClientHandlerForceToUseHttp1_1 : System.Net.Http.HttpClientHandler
     {
         protected override System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> SendAsync(System.Net.Http.HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)

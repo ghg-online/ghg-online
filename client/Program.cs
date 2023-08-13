@@ -17,6 +17,10 @@ else if (args[0] == "--local-server")
 else if (args[0] == "--remote-server")
     channel = GrpcChannel.ForAddress("https://main-service-ghg-online-root-lqeqesemvw.cn-beijing.fcapp.run",
         new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerForceToUseHttp1_1() });
+// channel = GrpcChannel.ForAddress("https://main-service-ghg-online-root-lqeqesemvw.cn-beijing.fcapp.run",
+//     new GrpcChannelOptions { HttpClient = new HttpClient { DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower } });
+// channel = GrpcChannel.ForAddress("https://main-service-ghg-online-root-lqeqesemvw.cn-beijing.fcapp.run",
+//     new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerForceVersionPolicy(HttpVersionPolicy.RequestVersionOrLower) });
 else
 {
     Console.WriteLine("Usage: [--local-server | --remote-server]");
