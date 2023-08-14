@@ -17,12 +17,10 @@ jobs:
       run: |
         mkdir /tmp/publish
         dotnet publish server --output /tmp/publish --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true
-        chmod +x /tmp/publish/server
+        zip /tmp/publish/ghg-online-server-linux-x64.zip /tmp/publish/server /tmp/publish/appsettings.json
     
     - name: Upload manifest
       uses: actions/upload-artifact@v3
       with:
-        name: server-executable-file
-        path: |
-          /tmp/publish/server
-          /tmp/publish/appsettings.json
+        name: packages
+        path: /tmp/publish/ghg-online-server-linux-x64.zip
