@@ -5,7 +5,7 @@ using server;
 using System.Net.Http;
 using System.Threading.Channels;
 
-string remote_url = "https://test-ghg-online-root-qqvduikhbx.cn-hongkong.fcapp.run";
+string remote_url = "https://main-service-ghg-online-root-lqeqesemvw.cn-hongkong.fcapp.run";
 GrpcChannel channel;
 if (args.Length == 0)
 {
