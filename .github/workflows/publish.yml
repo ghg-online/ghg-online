@@ -1,6 +1,18 @@
 name: publish
 
-on: [ pull_request, workflow_dispatch ]
+on: 
+  workflow_dispatch:
+    inputs:
+      self-contained:
+        required: true
+        type: boolean
+      publish-single-file:
+        required: true
+        type: boolean
+      publish-ready-to-run:
+        required: true
+        type: boolean
+    
 
 jobs:
   publish:
@@ -8,9 +20,6 @@ jobs:
         matrix:
           project: [ client, server ]
           platform: [ win-x64, win-x86, win-arm64, linux-x64 ]
-          self-contained: [ true, false ]
-          PublishSingleFile: [ true, false ]
-          PublishReadyToRun: [ true, false ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -23,12 +32,12 @@ jobs:
     - name: Publish
       run: |
         mkdir /tmp/publish
-        dotnet publish ${{ matrix.project }}  --output /tmp/publish --runtime ${{ matrix.platform }} --self-contained ${{ matrix.self-contained }} -p:PublishSingleFile=${{ matrix.PublishSingleFile }} -p:PublishReadyToRun=${{ matrix.PublishReadyToRun }}
+        dotnet publish ${{ matrix.project }}  --output /tmp/publish --runtime ${{ matrix.platform }} --self-contained ${{ format('{0}', inputs.self-contained) }} -p:PublishSingleFile=${{ format('{0}', inputs.publish-single-file) }} -p:PublishReadyToRun=${{ format('{0}', inputs.publish-ready-to-run) }}
         cd /tmp/publish
-        zip -c -p ghg-online-${{ matrix.project }}-${{ matrix.platform }}-${{ matrix.self-contained }}-${{ matrix.PublishSingleFile }}-${{ matrix.PublishReadyToRun }}.zip *
-    
+        zip -c -p ghg-online-${{ matrix.project }}-${{ matrix.platform }}.zip *
+      
     - name: Upload manifest
       uses: actions/upload-artifact@v3
       with:
         name: packages
-        path: /tmp/publish/ghg-online-${{ matrix.project }}-${{ matrix.platform }}-${{ matrix.self-contained }}-${{ matrix.PublishSingleFile }}-${{ matrix.PublishReadyToRun }}.zip
+        path: /tmp/publish/ghg-online-${{ matrix.project }}-${{ matrix.platform }}.zip
