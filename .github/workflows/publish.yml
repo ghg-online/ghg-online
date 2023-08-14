@@ -47,4 +47,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: packages
-        path: ghg-online-server-windows-x64.zip
+        path: /tmp/publish/ghg-online-server-windows-x64.zip
