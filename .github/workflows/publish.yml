@@ -23,12 +23,7 @@ jobs:
     - name: Publish
       run: |
         mkdir /tmp/publish
-        dotnet publish ${{ matrix.project }}  /
-          --output /tmp/publish               /
-          --runtime ${{ matrix.platform }}    /
-          --self-contained ${{ matrix.self-contained }} /
-          -p:PublishSingleFile=${{ matrix.PublishSingleFile }} /
-          -p:PublishReadyToRun=${{ matrix.PublishReadyToRun }}
+        dotnet publish ${{ matrix.project }}  --output /tmp/publish --runtime ${{ matrix.platform }} --self-contained ${{ matrix.self-contained }} -p:PublishSingleFile=${{ matrix.PublishSingleFile }} -p:PublishReadyToRun=${{ matrix.PublishReadyToRun }}
         cd /tmp/publish
         zip -c -p ghg-online-${{ matrix.project }}-${{ matrix.platform }}-${{ matrix.self-contained }}-${{ matrix.PublishSingleFile }}-${{ matrix.PublishReadyToRun }}.zip *
     
