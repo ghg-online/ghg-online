@@ -5,6 +5,7 @@ using server;
 using System.Net.Http;
 using System.Threading.Channels;
 
+string remote_url = "https://test-ghg-online-root-qqvduikhbx.cn-hongkong.fcapp.run";
 GrpcChannel channel;
 if (args.Length == 0)
 {
@@ -15,12 +16,9 @@ else if (args[0] == "--local-server")
     channel = GrpcChannel.ForAddress("https://127.0.0.1:2333",
         new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerDisableSslCertificateValidation() });
 else if (args[0] == "--remote-server")
-    channel = GrpcChannel.ForAddress("https://main-service-ghg-online-root-lqeqesemvw.cn-beijing.fcapp.run",
-        new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerForceToUseHttp1_1() });
-// channel = GrpcChannel.ForAddress("https://main-service-ghg-online-root-lqeqesemvw.cn-beijing.fcapp.run",
-//     new GrpcChannelOptions { HttpClient = new HttpClient { DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower } });
-// channel = GrpcChannel.ForAddress("https://main-service-ghg-online-root-lqeqesemvw.cn-beijing.fcapp.run",
-//     new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerForceVersionPolicy(HttpVersionPolicy.RequestVersionOrLower) });
+    channel = GrpcChannel.ForAddress(remote_url, new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerForceToUseHttp1_1() });
+// channel = GrpcChannel.ForAddress(remote_url, new GrpcChannelOptions { HttpClient = new HttpClient { DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower } });
+// channel = GrpcChannel.ForAddress(remote_url, new GrpcChannelOptions { HttpHandler = new client.HttpClientHandlerForceVersionPolicy(HttpVersionPolicy.RequestVersionOrLower) });
 else
 {
     Console.WriteLine("Usage: [--local-server | --remote-server]");
