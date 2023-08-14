@@ -1,4 +1,4 @@
-name: publish-linux-x64
+name: publish
 
 on: [ pull_request, workflow_dispatch ]
 
@@ -39,7 +39,7 @@ jobs:
     - name: Publish
       run: |
         mkdir /tmp/publish
-        dotnet publish server --output /tmp/publish ---runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true
+        dotnet publish server --output /tmp/publish --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true
         cd /tmp/publish
         zip -c -p ghg-online-server-windows-x64.zip server.exe appsettings.json
     
