@@ -3,7 +3,7 @@ name: publish-linux-x64
 on: [ pull_request, workflow_dispatch ]
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -16,7 +16,7 @@ jobs:
     - name: Publish
       run: |
         mkdir /tmp/publish
-        dotnet publish server --self-contained true -p:PublishSingleFile=true --output /tmp/publish -p:PublishReadyToRun=true
+        dotnet publish server --output /tmp/publish --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true
         chmod +x /tmp/publish/server
     
     - name: Upload manifest
