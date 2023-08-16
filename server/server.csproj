@@ -4,6 +4,9 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<RepositoryUrl>https://github.com/nictheboy/ghg-online</RepositoryUrl>
+		<Version>0.0.0.1</Version>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 	</PropertyGroup>
 
 	<ItemGroup>

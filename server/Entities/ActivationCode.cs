@@ -4,12 +4,12 @@ namespace server.Entities
 {
     public class ActivationCode
     {
-        [BsonId]
+        public int Id { get; set; }
         public string Code { get; set; }
 
-        ActivationCode()
+        public ActivationCode()
         {
-            Code = new Guid().ToString();
+            Code = Guid.NewGuid().ToString();
         }
     }
 }
