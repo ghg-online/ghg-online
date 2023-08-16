@@ -1,7 +1,7 @@
 ﻿using LiteDB;
 using server.Services;
 
-namespace server.Database
+namespace server.Helpers
 {
     public class DbHolder : IDbHolder
     {
@@ -19,7 +19,7 @@ namespace server.Database
             return $"Filename={Path.Combine(path, filename)};Connection=Shared";
         }
 
-        public LiteDatabase LiteDatabase
+        public ILiteDatabase LiteDatabase
         {
             get
             {
