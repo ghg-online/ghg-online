@@ -27,6 +27,8 @@ namespace client
                 string line = Console.ReadLine() ?? "exit";
                 if (line == "exit")
                     break;
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
                 parser.InvokeAsync(line).Wait();
             }
         }

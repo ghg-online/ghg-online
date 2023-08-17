@@ -7,6 +7,7 @@ package account;
 service Account{
 	rpc Login(LoginRequest) returns (LoginResponse);
 	rpc Register(RegisterRequest) returns (RegisterResponse);
+	rpc GenerateActivationCode(GenerateActivationCodeRequest) returns (GenerateActivationCodeResponse);
 }
 
 message LoginRequest{
@@ -29,4 +30,14 @@ message RegisterRequest{
 message RegisterResponse{
 	bool success = 1;
 	string message = 2;
+}
+
+message GenerateActivationCodeRequest{
+	int32 number = 1;
+}
+
+message GenerateActivationCodeResponse{
+	bool success = 1;
+	string message = 2;
+	string activation_code = 3;
 }

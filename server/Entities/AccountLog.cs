@@ -8,7 +8,8 @@
             Logout,
             Register,
             ChangePassword,
-            ChangeUsername
+            ChangeUsername,
+            GenerateActivationCode,
         }
         public AccountLogType Type { get; set; }
         public DateTime Time { get; set; }

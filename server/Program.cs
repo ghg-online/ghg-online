@@ -9,6 +9,7 @@ builder.Services.AddScoped<IAccountManager, AccountManager>();
 builder.Services.AddScoped<IActivationCodeManager, ActivationCodeManager>();
 builder.Services.AddScoped<IDbHolder, DbHolder>();
 builder.Services.AddScoped<ITransactionManager, TransactionManager>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

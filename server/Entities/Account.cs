@@ -27,6 +27,20 @@ namespace server.Entities
 
         public const string _password_sha256_secret = "_password_sha256_secret_ghg_online";
 
+        public bool IsAbleTo(string action)
+        {
+            switch (action)
+            {
+                case "GenerateActivationCode":
+                    if (Role == RoleCode.Admin)
+                        return true;
+                    else
+                        return false;
+                default:
+                    throw new Exception($"Unknown action: {action}");
+            }
+        }
+
         public static string HashCode(string origin)
         {
             byte[] keyByte = Encoding.GetEncoding("utf-8").GetBytes(_password_sha256_secret);
@@ -38,15 +52,15 @@ namespace server.Entities
 
         public string GenerateToken(string secret)
         {
-            if(String.IsNullOrEmpty(Username)) throw new Exception("Generate token from an Account object whose username is null");
-            if(String.IsNullOrEmpty(secret)) throw new Exception("Generate token with an empty secret");
-            
+            if (String.IsNullOrEmpty(Username)) throw new Exception("Generate token from an Account object whose username is null");
+            if (String.IsNullOrEmpty(secret)) throw new Exception("Generate token with an empty secret");
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secret);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new []
+                Subject = new ClaimsIdentity(new[]
                 {
                     new Claim("Id", Id.ToString()),
                     new Claim("Username", Username),
@@ -79,9 +93,9 @@ namespace server.Entities
         public static void ValidateAndReadToken(string secret, string token, out string id, out string username, out string role)
         {
             var validatedToken = ValidateToken(secret, token);
-            id = validatedToken.Claims.First(x => x.Type == "id").Value;
-            username = validatedToken.Claims.First(x => x.Type == "username").Value;
-            role = validatedToken.Claims.First(x => x.Type == "role").Value;
+            id = validatedToken.Claims.First(x => x.Type == "Id").Value;
+            username = validatedToken.Claims.First(x => x.Type == "Username").Value;
+            role = validatedToken.Claims.First(x => x.Type == "Role").Value;
         }
     }
 }

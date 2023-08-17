@@ -50,11 +50,25 @@ namespace client
             return registerCommand;
         }
 
+        private Command BuildGencode()
+        {
+            var numberOption = new Option<int>("--num", "The number of codes to generate");
+            numberOption.AddAlias("-n");
+            numberOption.SetDefaultValue(1);
+            var gencodeCommand = new Command("gencode", "Generate new activation codes")
+            {
+                numberOption,
+            };
+            Handler.SetHandler(gencodeCommand, ghgClient.GenerateActivationCode, numberOption);
+            return gencodeCommand;
+        }
+
         public Parser Build()
         {
             var rootCommand = new RootCommand("A client for the GHG online service");
             rootCommand.AddCommand(BuildLogin());
             rootCommand.AddCommand(BuildRegister());
+            rootCommand.AddCommand(BuildGencode());
 
             var builder = new CommandLineBuilder(rootCommand);
             builder.UseHelp()

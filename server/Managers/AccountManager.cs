@@ -57,7 +57,7 @@ namespace server.Managers
         {
             try
             {
-                Entities.Account.ValidateAndReadToken(token, _jwt_secret, out string id_str, out string username, out string role_str);
+                Entities.Account.ValidateAndReadToken(_jwt_secret, token, out string id_str, out string username, out string role_str);
                 Guid id = Guid.Parse(id_str);
                 Entities.Account.RoleCode role = (Entities.Account.RoleCode)Enum.Parse(typeof(Entities.Account.RoleCode), role_str);
                 Entities.Account account = new()
@@ -74,6 +74,12 @@ namespace server.Managers
             {
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token. Please login again"));
             }
+        }
+
+        public Entities.Account VerifyTokenAndGetAccount(ServerCallContext context)
+        {
+            return VerifyTokenAndGetAccount(context.RequestHeaders.GetValue("Authorization")?.Replace("Bearer ", "")
+                ?? throw new RpcException(new Status(StatusCode.Unauthenticated, "Authentication required")));
         }
     }
 }

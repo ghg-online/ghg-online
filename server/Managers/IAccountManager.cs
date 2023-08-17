@@ -1,4 +1,6 @@
-﻿namespace server.Managers
+﻿using Grpc.Core;
+
+namespace server.Managers
 {
     public interface IAccountManager
     {
@@ -7,5 +9,6 @@
         public bool ExistsUsername(string username);
         string? VerifyPasswordAndGenerateToken(string username, string password); // return null if failed
         Entities.Account VerifyTokenAndGetAccount(string token);
+        Entities.Account VerifyTokenAndGetAccount(ServerCallContext context);
     }
 }
