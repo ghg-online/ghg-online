@@ -1,10 +1,14 @@
-using server.Helpers;
+using LiteDB;
+using server.Managers;
 using server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();
-builder.Services.AddSingleton<IDbHolder, DbHolder>();
-builder.Services.AddSingleton<IAccountLogger, AccountLogger>();
+builder.Services.AddScoped<IAccountLogger, AccountLogger>();
+builder.Services.AddScoped<IAccountManager, AccountManager>();
+builder.Services.AddScoped<IActivationCodeManager, ActivationCodeManager>();
+builder.Services.AddScoped<IDbHolder, DbHolder>();
+builder.Services.AddScoped<ITransactionManager, TransactionManager>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

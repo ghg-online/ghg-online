@@ -25,8 +25,6 @@ namespace server.Entities
         public StatusCode Status { get; set; }
         public RoleCode Role { get; set; }
 
-
-
         public const string _password_sha256_secret = "_password_sha256_secret_ghg_online";
 
         public static string HashCode(string origin)
@@ -40,9 +38,8 @@ namespace server.Entities
 
         public string GenerateToken(string secret)
         {
-            if(String.IsNullOrEmpty(Username)) throw new ArgumentNullException("username");
-            if(String.IsNullOrEmpty(PasswordHash)) throw new ArgumentNullException("password");
-            if(String.IsNullOrEmpty(secret)) throw new ArgumentNullException("secret");
+            if(String.IsNullOrEmpty(Username)) throw new Exception("Generate token from an Account object whose username is null");
+            if(String.IsNullOrEmpty(secret)) throw new Exception("Generate token with an empty secret");
             
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secret);
@@ -63,7 +60,7 @@ namespace server.Entities
             return tokenHandler.WriteToken(token);
         }
 
-        private JwtSecurityToken ValidateToken(string secret, string token)
+        private static JwtSecurityToken ValidateToken(string secret, string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secret);
@@ -79,7 +76,7 @@ namespace server.Entities
             return (JwtSecurityToken)validatedToken;
         }
 
-        public void ValidateAndReadToken(string secret, string token, out string id, out string username, out string role)
+        public static void ValidateAndReadToken(string secret, string token, out string id, out string username, out string role)
         {
             var validatedToken = ValidateToken(secret, token);
             id = validatedToken.Claims.First(x => x.Type == "id").Value;
