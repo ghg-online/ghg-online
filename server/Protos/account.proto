@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+option csharp_namespace = "server.Protos";
+
+package account;
+
+service Account{
+	rpc Login(LoginRequest) returns (LoginResponse);
+	rpc Register(RegisterRequest) returns (RegisterResponse);
+	rpc GenerateActivationCode(GenerateActivationCodeRequest) returns (GenerateActivationCodeResponse);
+	rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+	rpc ChangeUsername(ChangeUsernameRequest) returns (ChangeUsernameResponse);
+	rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+}
+
+message LoginRequest{
+	string username = 1;
+	string password = 2;
+}
+
+message LoginResponse{
+	bool success = 1;
+	string message = 2;
+	string jwt_token = 3;
+}
+
+message RegisterRequest{
+	string username = 1;
+	string password = 2;
+	string activation_code = 3;
+}
+
+message RegisterResponse{
+	bool success = 1;
+	string message = 2;
+}
+
+message GenerateActivationCodeRequest{
+	int32 number = 1;
+}
+
+message GenerateActivationCodeResponse{
+	bool success = 1;
+	string message = 2;
+	string activation_code = 3;
+}
+
+message ChangePasswordRequest{
+	string target_username = 1;
+	string password = 2;
+	string new_password = 3;
+}
+
+message ChangePasswordResponse{
+	bool success = 1;
+	string message = 2;
+}
+
+message ChangeUsernameRequest{
+	string target_username = 1;
+	string password = 2;
+	string new_username = 3;
+}
+
+message ChangeUsernameResponse{
+	bool success = 1;
+	string message = 2;
+}
+
+message DeleteAccountRequest{
+	string target_username = 1;
+	string password = 2;
+}
+
+message DeleteAccountResponse{
+	bool success = 1;
+	string message = 2;
+}

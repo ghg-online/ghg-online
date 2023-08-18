@@ -1,17 +1,31 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿// .\client.exe login --url https://localhost:2333 --usr user --pwd 123456
+// .\client.exe register --url https://localhost:2333 --usr user --pwd 123456 --code 2a01cf54-65bb-4ba8-99a9-71b1f4cc74e2
 
 using Grpc.Net.Client;
 using server;
+using System.Net.Http;
+using System.Threading.Channels;
+using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
+using client;
 
-// from http://duoduokou.com/csharp/64085357176954393069.html
-// disable ssl certificate validation
-var httpClientHandler = new HttpClientHandler();
-httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
-var httpClient = new HttpClient(httpClientHandler);
+var rootCommand = new RootCommand("A client for the GHG online service");
 
-// connect to server, port = 2333, using https without ssl certificate validation
-var channel = GrpcChannel.ForAddress("https://127.0.0.1:2333", new GrpcChannelOptions() { HttpClient = httpClient });
+var urlOption = new Option<string>("--url", "The url of the remote server");
+urlOption.AddAlias("-u");
 
-var client = new Greeter.GreeterClient(channel);
-var response = await client.SayHelloAsync(new HelloRequest { Name = "GreeterClient" }).ResponseAsync;
-Console.WriteLine($"Server reply: {response.Message}");
+rootCommand.AddGlobalOption(urlOption);
+rootCommand.SetHandler(CmdShell.Run, urlOption);
+
+var builder = new CommandLineBuilder(rootCommand);
+builder.UseHelp().UseEnvironmentVariableDirective()
+                .UseParseDirective()
+                .UseSuggestDirective()
+                .RegisterWithDotnetSuggest()
+                .UseTypoCorrections()
+                .UseParseErrorReporting()
+                .UseExceptionHandler()
+                .CancelOnProcessTermination();
+var parser = builder.Build();
+return parser.Invoke(args);
