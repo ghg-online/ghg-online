@@ -24,51 +24,94 @@ namespace client
 
         private Command BuildLogin()
         {
-            var usernameOption = new Option<string>("--usr", "The username") { IsRequired = true };
-            var passwordOption = new Option<string>("--pwd", "The password") { IsRequired = true };
+            var usernameArgument = new Argument<string>("user", "The username");
+            var passwordArgument = new Argument<string>("password", "The password");
             var loginCommand = new Command("login", "Login with an existing account")
             {
-                usernameOption,
-                passwordOption,
+                usernameArgument,
+                passwordArgument,
             };
-            Handler.SetHandler(loginCommand, ghgClient.Login, usernameOption, passwordOption);
+            Handler.SetHandler(loginCommand, ghgClient.Login, usernameArgument, passwordArgument);
             return loginCommand;
         }
 
         private Command BuildRegister()
         {
-            var activationCodenewOption = new Option<string>("--code", "The activation code") { IsRequired = true };
-            var usernameOption = new Option<string>("--usr", "The username") { IsRequired = true };
-            var passwordOption = new Option<string>("--pwd", "The password") { IsRequired = true };
+            var activationCodeArgument = new Argument<string>("code", "The activation code");
+            var usernameArgument = new Argument<string>("user", "The username");
+            var passwordArgument = new Argument<string>("password", "The password");
             var registerCommand = new Command("register", "Register a new account")
             {
-                activationCodenewOption,
-                usernameOption,
-                passwordOption,
+                usernameArgument,
+                passwordArgument,
+                activationCodeArgument,
             };
-            Handler.SetHandler(registerCommand, ghgClient.Register, activationCodenewOption, usernameOption, passwordOption);
+            Handler.SetHandler(registerCommand, ghgClient.Register, usernameArgument, passwordArgument, activationCodeArgument);
             return registerCommand;
         }
 
         private Command BuildGencode()
         {
-            var numberOption = new Option<int>("--num", "The number of codes to generate");
-            numberOption.AddAlias("-n");
-            numberOption.SetDefaultValue(1);
+            var numberArgument = new Argument<int>("num", "The number of codes to generate");
+            numberArgument.SetDefaultValue(1);
             var gencodeCommand = new Command("gencode", "Generate new activation codes")
             {
-                numberOption,
+                numberArgument,
             };
-            Handler.SetHandler(gencodeCommand, ghgClient.GenerateActivationCode, numberOption);
+            Handler.SetHandler(gencodeCommand, ghgClient.GenerateActivationCode, numberArgument);
             return gencodeCommand;
+        }
+
+        private Command BuildChangepwd()
+        {
+            var targetUserOption = new Option<string>("--usr", "The user whose password will be changed");
+            targetUserOption.SetDefaultValue(ghgClient.Username);
+            var newPasswordArgument = new Argument<string>("new", "The new password");
+            var changepwdCommand = new Command("changepwd", "Change the password of an account")
+            {
+                targetUserOption,
+                newPasswordArgument,
+            };
+            Handler.SetHandler(changepwdCommand, ghgClient.ChangePassword, targetUserOption, newPasswordArgument);
+            return changepwdCommand;
+        }
+
+        private Command BuildChangeusr()
+        {
+            var targetUserOption = new Option<string>("--usr", "The user whose password will be changed");
+            targetUserOption.SetDefaultValue(ghgClient.Username);
+            var newUsernameArgument = new Argument<string>("new", "The new username");
+            var changeusrCommand = new Command("changeusr", "Change the username of an account")
+            {
+                targetUserOption,
+                newUsernameArgument,
+            };
+            Handler.SetHandler(changeusrCommand, ghgClient.ChangeUsername, targetUserOption, newUsernameArgument);
+            return changeusrCommand;
+        }
+
+        private Command BuildDelete()
+        {
+            var targetUserOption = new Option<string>("--usr", "The user to be deleted");
+            targetUserOption.SetDefaultValue(ghgClient.Username);
+            var deleteCommand = new Command("delete", "Delete an account")
+            {
+                targetUserOption,
+            };
+            Handler.SetHandler(deleteCommand, ghgClient.DeleteAccount, targetUserOption);
+            return deleteCommand;
         }
 
         public Parser Build()
         {
             var rootCommand = new RootCommand("A client for the GHG online service");
+            rootCommand.Name = ">";
             rootCommand.AddCommand(BuildLogin());
             rootCommand.AddCommand(BuildRegister());
             rootCommand.AddCommand(BuildGencode());
+            rootCommand.AddCommand(BuildChangepwd());
+            rootCommand.AddCommand(BuildChangeusr());
+            rootCommand.AddCommand(BuildDelete());
 
             var builder = new CommandLineBuilder(rootCommand);
             builder.UseHelp()

@@ -1,7 +1,7 @@
 ﻿using LiteDB;
 using static server.Entities.AccountLog;
 
-namespace server.Managers
+namespace server.Services.Database
 {
     public interface IAccountLogger
     {

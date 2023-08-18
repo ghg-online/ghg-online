@@ -1,6 +1,6 @@
 using LiteDB;
-using server.Managers;
-using server.Services;
+using server.Services.Database;
+using server.Services.gRPC;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();

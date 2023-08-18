@@ -7,6 +7,7 @@
             Login,
             Logout,
             Register,
+            Delete,
             ChangePassword,
             ChangeUsername,
             GenerateActivationCode,

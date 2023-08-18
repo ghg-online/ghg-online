@@ -2,14 +2,14 @@
 using server.Entities;
 using static server.Entities.AccountLog;
 
-namespace server.Managers
+namespace server.Services.Database
 {
     public class AccountLogger : IAccountLogger
     {
         private readonly ILiteCollection<AccountLog> _accountLogs;
         public AccountLogger(IDbHolder dbHolder)
         {
-            _accountLogs= dbHolder.DbAccountService.GetCollection<AccountLog>("account_logs");
+            _accountLogs = dbHolder.DbAccountService.GetCollection<AccountLog>("account_logs");
         }
         public void WriteLog(AccountLogType type, string? ip, string? userName, bool success, string? appendix)
         {

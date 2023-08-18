@@ -2,13 +2,13 @@
 using Microsoft.Extensions.Logging;
 using server.Services;
 
-namespace server.Managers
+namespace server.Services.Database
 {
     public class DbHolder : IDbHolder, IDisposable
     {
         private readonly ILogger _logger;
         private readonly LiteDatabase _db_account_service;
-        private static string? _db_account_service_connection_string;
+        private static string? _db_account_service_connection_string = null;
 
         public DbHolder(ILogger<DbHolder> logger, IConfiguration configuration)
         {

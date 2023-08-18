@@ -1,7 +1,7 @@
 ﻿using LiteDB;
 using server.Entities;
 
-namespace server.Managers
+namespace server.Services.Database
 {
     public class ActivationCodeManager : IActivationCodeManager
     {

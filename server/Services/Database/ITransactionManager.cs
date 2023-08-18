@@ -1,4 +1,4 @@
-﻿namespace server.Managers
+﻿namespace server.Services.Database
 {
     public interface ITransactionManager
     {
