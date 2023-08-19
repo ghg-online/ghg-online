@@ -13,20 +13,15 @@ namespace server.Services.gRPC;
 
 public sealed class AccountService : Protos.Account.AccountBase
 {
-    private readonly ITransactionManager _transactionManager;
     private readonly IActivationCodeManager _activationCodeManager;
     private readonly IAccountManager _accountManager;
     private readonly IAccountLogger _accountLogger;
-    private readonly ILogger<AccountService> _logger;
 
-    public AccountService(ITransactionManager transactionManager, IActivationCodeManager activationCodeManager
-        , IAccountManager accountManager, IAccountLogger accountLogger, ILogger<AccountService> logger)
+    public AccountService(IActivationCodeManager activationCodeManager, IAccountManager accountManager, IAccountLogger accountLogger)
     {
-        _transactionManager = transactionManager;
         _activationCodeManager = activationCodeManager;
         _accountManager = accountManager;
         _accountLogger = accountLogger;
-        _logger = logger;
     }
 
     public override Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
@@ -79,15 +74,11 @@ public sealed class AccountService : Protos.Account.AccountBase
             _accountLogger.WriteLog(accountLogType, context.Peer, request.Username, false, "Invalid username");
             return Task.FromResult(new RegisterResponse { Success = false, Message = "Invalid username!\nUsername should be a unique string consists of 6-32 alphas(a-zA-Z), digits(0-9), underscores(_), and hyphens(-)" });
         }
-
-        _transactionManager.BeginTrans();
-
         if (_activationCodeManager.VerifyCode(request.ActivationCode) == false)
         {
             _accountLogger.WriteLog(accountLogType, context.Peer, request.Username, false, "Invalid activation code");
             return Task.FromResult(new RegisterResponse { Success = false, Message = "Invalid activation code!" });
         }
-
         if (_accountManager.ExistsUsername(request.Username))
         {
             _accountLogger.WriteLog(accountLogType, context.Peer, request.Username, false, "Username already exists");
@@ -97,8 +88,6 @@ public sealed class AccountService : Protos.Account.AccountBase
         _activationCodeManager.UseCode(request.ActivationCode);
         _accountManager.CreateAccount(request.Username, request.Password, Entities.Account.RoleCode.User);
         _accountLogger.WriteLog(accountLogType, context.Peer, request.Username, true, "Register success");
-
-        _transactionManager.Commit();
 
         return Task.FromResult(new RegisterResponse { Success = true, Message = "Register success!" });
     }
