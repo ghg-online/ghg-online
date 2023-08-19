@@ -15,4 +15,5 @@ var app = builder.Build();
 app.MapGrpcService<AccountService>();
 app.MapGrpcReflectionService(); // This allows clients to discover the service and call it, which is espicially usefor for auto-testing
                                 // If you don't want it (for example, for security reasons), delete this line without worry
+app.Map("/", () => "Please use a gRPC client");
 app.Run();
