@@ -11,6 +11,7 @@
             ChangePassword,
             ChangeUsername,
             GenerateActivationCode,
+            Information,
         }
         public AccountLogType Type { get; set; }
         public DateTime Time { get; set; }

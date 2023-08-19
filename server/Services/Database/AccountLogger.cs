@@ -9,7 +9,7 @@ namespace server.Services.Database
         private readonly ILiteCollection<AccountLog> _accountLogs;
         public AccountLogger(IDbHolder dbHolder)
         {
-            _accountLogs = dbHolder.DbAccountService.GetCollection<AccountLog>("account_logs");
+            _accountLogs = dbHolder.DbAccountServiceLog.GetCollection<AccountLog>();
         }
         public void WriteLog(AccountLogType type, string? ip, string? userName, bool success, string? appendix)
         {

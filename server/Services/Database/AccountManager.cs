@@ -12,7 +12,7 @@ namespace server.Services.Database
 
         public AccountManager(IDbHolder dbHolder, IConfiguration configuration)
         {
-            _accounts = dbHolder.DbAccountService.GetCollection<Entities.Account>("accounts");
+            _accounts = dbHolder.DbAccountService.GetCollection<Entities.Account>();
             _jwt_secret = configuration.GetSection("jwt").GetValue<string>("jwt-secret");
         }
 

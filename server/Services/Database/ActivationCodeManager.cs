@@ -11,7 +11,7 @@ namespace server.Services.Database
 
         public ActivationCodeManager(IDbHolder dbHolder, ITransactionManager transactionManager, ILogger<ActivationCodeManager> logger)
         {
-            _activationCodes = dbHolder.DbAccountService.GetCollection<ActivationCode>("activation_codes");
+            _activationCodes = dbHolder.DbAccountService.GetCollection<ActivationCode>();
             _transactionManager = transactionManager;
             _logger = logger;
         }
