@@ -5,27 +5,11 @@ using Grpc.Net.Client;
 using server;
 using System.Net.Http;
 using System.Threading.Channels;
-using System.CommandLine;
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
 using client;
+using Terminal.Gui;
+using client.Gui;
 
-var rootCommand = new RootCommand("A client for the GHG online service");
-
-var urlOption = new Option<string>("--url", "The url of the remote server");
-urlOption.AddAlias("-u");
-
-rootCommand.AddGlobalOption(urlOption);
-rootCommand.SetHandler(CmdShell.Run, urlOption);
-
-var builder = new CommandLineBuilder(rootCommand);
-builder.UseHelp().UseEnvironmentVariableDirective()
-                .UseParseDirective()
-                .UseSuggestDirective()
-                .RegisterWithDotnetSuggest()
-                .UseTypoCorrections()
-                .UseParseErrorReporting()
-                .UseExceptionHandler()
-                .CancelOnProcessTermination();
-var parser = builder.Build();
-return parser.Invoke(args);
+Application.Init();
+Application.Top.Add(new Welcome());
+Application.Run();
+Application.Shutdown();

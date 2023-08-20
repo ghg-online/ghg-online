@@ -1,10 +1,18 @@
 using LiteDB;
+using server.Services.Authenticate;
+using server.Services.Authorize;
 using server.Services.Database;
 using server.Services.gRPC;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();
+builder.Services.AddSingleton<JwtSecurityTokenHandler>();
+builder.Services.AddSingleton<IRsaPairManager, RsaPairManager>();
+builder.Services.AddSingleton<IRsaPubkeyManager, RsaPairManager>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddSingleton<AuthHelper>();
 builder.Services.AddSingleton<IAccountLogger, AccountLogger>();
 builder.Services.AddSingleton<IAccountManager, AccountManager>();
 builder.Services.AddSingleton<IActivationCodeManager, ActivationCodeManager>();

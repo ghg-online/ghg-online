@@ -1,12 +1,13 @@
 ﻿/*  IMPORTANT:
- *      Do not call any method of a database service from another database service,
- *      because it might cause a deadlock.
+ *  
+ *      Database service should only call methods of low level database services,
+ *      such as LiteDatabase, SqlConnection, etc.
  *      
- *      There are several different databases, and each database has its own lock.
- *      If database A calls a method of database B, and database B calls a method of database A,
- *      a deadlock might occur.
+ *      The reason is to avoid deadlock, and to make the code more readable by
+ *      ensuring database service is only an interface to the database.
  *      
  *      Put this notice to all database services.
+ *      
  */
 
 using Grpc.Core;
@@ -31,14 +32,13 @@ namespace server.Services.Database
 
         public void CreateAccount(string username, string password, Entities.Account.RoleCode role)
         {
-            Entities.Account account = new()
-            {
-                Id = Guid.NewGuid(),
-                Username = username,
-                PasswordHash = Entities.Account.HashCode(password),
-                Status = Entities.Account.StatusCode.Activated,
-                Role = role
-            };
+            Entities.Account account = new(
+                id: Guid.NewGuid(),
+                username: username,
+                passwordHash: Entities.Account.HashCode(password, username),
+                status: Entities.Account.StatusCode.Activated,
+                role: role
+            );
             lock (_db_lock) _accounts.Insert(account);
         }
 
@@ -57,62 +57,13 @@ namespace server.Services.Database
             }
         }
 
-        public string? VerifyPasswordAndGenerateToken(string username, string password)
-        {
-            Entities.Account account;
-            lock (_db_lock) account = _accounts.FindOne(x => x.Username == username && x.Status != Account.StatusCode.Deleted);
-            if (account == null
-                || account.PasswordHash != Entities.Account.HashCode(password)
-                || account.Status != Entities.Account.StatusCode.Activated)
-                return null;
-            else
-                return account.GenerateToken(_jwt_secret);
-        }
-
-        public Entities.Account.Token VerifyTokenAndGetInfo(string token)
-        {
-            try
-            {
-                return Entities.Account.ValidateAndReadToken(_jwt_secret, token);
-            }
-            catch (Exception)
-            {
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token. Please login again"));
-            }
-        }
-
-        public Account.Token VerifyTokenAndGetInfo(ServerCallContext context)
-        {
-            return VerifyTokenAndGetInfo(context.RequestHeaders.GetValue("Authorization")?.Replace("Bearer ", "")
-                ?? throw new RpcException(new Status(StatusCode.Unauthenticated, "Authentication required")));
-        }
-
-        public Entities.Account VerifyTokenAndGetAccount(string token)
-        {
-            try
-            {
-                var token_info = Entities.Account.ValidateAndReadToken(_jwt_secret, token);
-                lock (_db_lock) return _accounts.FindOne(x => x.Id == token_info.Id && x.Status != Account.StatusCode.Deleted)
-                        ?? throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token. Please login again"));
-            }
-            catch (Exception)
-            {
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token. Please login again"));
-            }
-        }
-
-        public Entities.Account VerifyTokenAndGetAccount(ServerCallContext context)
-        {
-            return VerifyTokenAndGetAccount(context.RequestHeaders.GetValue("Authorization")?.Replace("Bearer ", "")
-                ?? throw new RpcException(new Status(StatusCode.Unauthenticated, "Authentication required")));
-        }
-
-        public void ChangeUsername(string username, string newUsername)
+        public void ChangeUsername(string username, string password, string newUsername)
         {
             lock (_db_lock)
             {
                 var account = _accounts.FindOne(x => x.Username == username && x.Status != Account.StatusCode.Deleted);
                 account.Username = newUsername;
+                account.PasswordHash = Entities.Account.HashCode(password, newUsername);
                 _accounts.Update(account);
             }
         }
@@ -122,9 +73,14 @@ namespace server.Services.Database
             lock (_db_lock)
             {
                 var account = _accounts.FindOne(x => x.Username == username && x.Status != Account.StatusCode.Deleted);
-                account.PasswordHash = Entities.Account.HashCode(newPassword);
+                account.PasswordHash = Entities.Account.HashCode(newPassword, username);
                 _accounts.Update(account);
             }
+        }
+
+        public Account QueryAccount(string username)
+        {
+            lock (_db_lock) return _accounts.FindOne(x => x.Username == username && x.Status != Account.StatusCode.Deleted);
         }
     }
 }

@@ -1,12 +1,13 @@
 ﻿/*  IMPORTANT:
- *      Do not call any method of a database service from another database service,
- *      because it might cause a deadlock.
+ *  
+ *      Database service should only call methods of low level database services,
+ *      such as LiteDatabase, SqlConnection, etc.
  *      
- *      There are several different databases, and each database has its own lock.
- *      If database A calls a method of database B, and database B calls a method of database A,
- *      a deadlock might occur.
+ *      The reason is to avoid deadlock, and to make the code more readable by
+ *      ensuring database service is only an interface to the database.
  *      
  *      Put this notice to all database services.
+ *      
  */
 
 using LiteDB;

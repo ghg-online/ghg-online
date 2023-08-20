@@ -5,6 +5,7 @@ option csharp_namespace = "server.Protos";
 package account;
 
 service Account{
+	rpc Ping(PingRequest) returns (PingRespond); // This is used to check if the server is online
 	rpc Login(LoginRequest) returns (LoginResponse);
 	rpc Register(RegisterRequest) returns (RegisterResponse);
 	rpc GenerateActivationCode(GenerateActivationCodeRequest) returns (GenerateActivationCodeResponse);
@@ -12,6 +13,9 @@ service Account{
 	rpc ChangeUsername(ChangeUsernameRequest) returns (ChangeUsernameResponse);
 	rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
 }
+
+message PingRequest{}
+message PingRespond{}
 
 message LoginRequest{
 	string username = 1;

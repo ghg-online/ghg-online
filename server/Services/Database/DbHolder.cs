@@ -29,7 +29,8 @@ namespace server.Services.Database
 
             if (_db_account_service_connection_string == null)
             {
-                string dbPath = Path.GetFullPath(configuration.GetSection("LiteDB").GetValue<string>("Path"));
+                string dbPath = Path.Combine(configuration["Data:BasePath"], configuration["Data:Directory:LiteDB"]);
+                if (Directory.Exists(dbPath) == false) Directory.CreateDirectory(dbPath);
                 _db_account_service_connection_string = MakeConnectionString(dbPath, "account_service.db");
                 logger.LogInformation("{str}", _db_account_service_connection_string);
                 if (!File.Exists(Path.Combine(dbPath, "account_service.db")))
@@ -41,9 +42,9 @@ namespace server.Services.Database
 
             if (_db_account_service_log_connection_string == null)
             {
-                string dbPath = Path.GetFullPath(configuration.GetSection("LiteDB").GetValue<string>("Path"));
+                string dbPath = Path.Combine(configuration["Data:BasePath"], configuration["Data:Directory:LiteDB"]);
                 _db_account_service_log_connection_string = MakeConnectionString(dbPath, "account_service.log.db");
-                logger.LogInformation("{str}",_db_account_service_log_connection_string);
+                logger.LogInformation("{str}", _db_account_service_log_connection_string);
                 if (!File.Exists(Path.Combine(dbPath, "account_service.log.db")))
                 {
                     CreateDbAccountServiceLog();
@@ -90,13 +91,13 @@ namespace server.Services.Database
                 col.EnsureIndex(x => x.Username);
 
                 col.Insert(new Entities.Account
-                {
-                    Id = Guid.NewGuid(),
-                    Username = "admin",
-                    PasswordHash = Entities.Account.HashCode("admin"),
-                    Status = Entities.Account.StatusCode.Activated,
-                    Role = Entities.Account.RoleCode.Admin
-                });
+                (
+                    id: Guid.NewGuid(),
+                    username: "admin",
+                    passwordHash: Entities.Account.HashCode("admin", "admin"),
+                    status: Entities.Account.StatusCode.Activated,
+                    role: Entities.Account.RoleCode.Admin
+                ));
 
                 var col2 = db.GetCollection<Entities.ActivationCode>();
                 col2.EnsureIndex(x => x.Code, true);
