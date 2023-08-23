@@ -32,13 +32,14 @@ namespace client
     {
         protected override System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> SendAsync(System.Net.Http.HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
+
             request.Version = new System.Version(1, 1);
             var task = base.SendAsync(request, cancellationToken);
             return task.ContinueWith(reply =>
             {
                 reply.Result.Version = new System.Version(2, 0);
                 return reply.Result;
-            });
+            }, cancellationToken);
         }
 
         protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
