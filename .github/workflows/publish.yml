@@ -19,7 +19,7 @@ jobs:
     strategy:
         matrix:
           project: [ client, server ]
-          platform: [ win-x64, win-x86, win-arm64, linux-x64 ]
+          platform: [ win-x64, win-x86, win-arm64, linux-x64, osx-x64 ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
