@@ -8,8 +8,8 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [ windows-2019, ubuntu-20.04, macos-11 ]
-        dotnet-version: [ 7.0.x ] # ghg-online requires .net 7
+        platform: [ windows-2019, ubuntu-20.04, macos-12 ]
+        dotnet-version: [ 6.0.x ] # ghg-online requires .net 6
 
     runs-on: ${{ matrix.platform }}
 
