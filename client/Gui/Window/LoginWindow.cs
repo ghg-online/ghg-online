@@ -3,7 +3,7 @@
  *  Filename    :   LoginWindow.cs
  *  Class       :   LoginWindow
  *  
- *  Creater     :   Nictheboy
+ *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
  *  Last Modify :   2023/08/22
  *  

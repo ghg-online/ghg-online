@@ -1,9 +1,9 @@
 ﻿/*  
  *  Namespace   :   client.Gui
- *  Filename    :   VisualGrpc.cs
- *  Class       :   VisualGrpc
+ *  Filename    :   WelcomeWindow.cs
+ *  Class       :   WelcomeWindow
  *  
- *  Creater     :   Nictheboy
+ *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
  *  Last Modify :   2023/08/22
  *  
@@ -48,7 +48,7 @@ namespace client.Gui
             this.Border.Effect3D = true;
             this.Border.Effect3DBrush = null;
             this.Border.DrawMarginFrame = true;
-            this.Add(welcomeLabel, serverUrlLable, urlBox, useLabel, versionGroup, connectButton);
+            this.Add(welcomeLabel, serverUrlLabel, urlBox, useLabel, versionGroup, connectButton);
             connectButton.Clicked += OnConnectButtonClicked;
             OnConnectSuccess += (channel) => { };
         }
@@ -121,7 +121,7 @@ namespace client.Gui
             Height = 1
         };
 
-        readonly Label serverUrlLable = new()
+        readonly Label serverUrlLabel = new()
         {
             Text = "Server URL:", // 11 characters
             X = 4,

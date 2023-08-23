@@ -1,14 +1,40 @@
-﻿using Grpc.Core;
+﻿/*  
+ *  Namespace   :   client.Gui
+ *  Filename    :   AccountMenu.cs
+ *  Class       :   AccountMenu
+ *  
+ *  Creator     :   Nictheboy
+ *  Create at   :   2023/08/22
+ *  Last Modify :   2023/08/23
+ *  
+ */
+
+using Grpc.Core;
 using NStack;
 using server.Protos;
-using System.ComponentModel;
 using Terminal.Gui;
 using static server.Protos.Account;
 
 namespace client.Gui
 {
+    /// <summary>
+    /// Account menu bar item, which is responsible for account related actions
+    /// </summary>
+    /// <remarks>
+    /// <para>You can see it at the top of your screen after you login</para>
+    /// <para>It will change according to your role</para>
+    /// <para>The protocol related to this menu is defined in Protos/account.proto</para>
+    /// </remarks>
     public class AccountMenu : MenuBarItem
     {
+        /// <summary>
+        /// Create account menu bar item, which is responsible for account related actions
+        /// </summary>
+        /// <remarks>
+        /// <para>You can see it at the top of your screen after you login</para>
+        /// <para>It will change according to your role</para>
+        /// <para>The protocol related to this menu is defined in Protos/account.proto</para>
+        /// </remarks>
         public AccountMenu()
         {
             Title = "Account";
@@ -162,12 +188,12 @@ namespace client.Gui
             try
             {
                 int result;
-                result = MessageBox.Query("Delete Account", "Are you shure to delete your account? "
+                result = MessageBox.Query("Delete Account", "Are you Shure to delete your account? "
                     + "This means you will lose all your data, and you can't redo this action!", "Yes", "No");
                 if (result != 0) return;
                 bool confirmed = InputDialog.Query("Delete Account", "Retype your password to confirm it", "Password:", "", out ustring Password);
                 if (!confirmed) return;
-                result = MessageBox.Query("Delete Account", "Are you really shure to delete your account? "
+                result = MessageBox.Query("Delete Account", "Are you really Shure to delete your account? "
                     + "This means you will lose ALL YOUR DATA, and you CAN'T redo this action!", "Yes", "No");
                 if (result != 0) return;
                 var request = new DeleteAccountRequest

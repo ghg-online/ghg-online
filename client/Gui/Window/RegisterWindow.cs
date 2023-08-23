@@ -3,9 +3,9 @@
  *  Filename    :   RegisterWindow.cs
  *  Class       :   RegisterWindow
  *  
- *  Creater     :   Nictheboy
+ *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/08/22
+ *  Last Modify :   2023/08/23
  *  
  */
 
@@ -59,7 +59,6 @@ namespace client.Gui
             KeyPress += OnKeyPress;
             OnRegisterSuccess += (GrpcChannel grpcChannel) => { };
             GrpcChannel = grpcChannel;
-            accountClient = new Account.AccountClient(GrpcChannel);
         }
 
         void OnInitialized(object? sender, EventArgs e)
@@ -83,7 +82,8 @@ namespace client.Gui
                     Password = passwordField.Text.ToString(),
                     ActivationCode = activationCode
                 };
-                var respond = await accountClient.RegisterAsync(request);
+                var client = new Account.AccountClient(GrpcChannel);
+                var respond = await VisualGrpc.InvokeAsync(client.RegisterAsync, request);
                 //Application.MainLoop.Invoke(() =>
                 //{
                 if (respond.Success)
@@ -120,8 +120,6 @@ namespace client.Gui
             else
                 Application.RequestStop();
         }
-
-        readonly Account.AccountClient accountClient;
 
         string? activationCode = null;
 

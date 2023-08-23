@@ -1,4 +1,15 @@
-﻿using NStack;
+﻿/*  
+ *  Namespace   :   client.Gui
+ *  Filename    :   ExceptionDialog.cs
+ *  Class       :   ExceptionDialog
+ *  
+ *  Creator     :   Nictheboy
+ *  Create at   :   2023/08/22
+ *  Last Modify :   2023/08/22
+ *  
+ */
+
+using NStack;
 using Terminal.Gui;
 
 namespace client.Gui

@@ -3,7 +3,7 @@
  *  Filename    :   VisualGrpc.cs
  *  Class       :   VisualGrpc
  *  
- *  Creater     :   Nictheboy
+ *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
  *  Last Modify :   2023/08/23
  *  
@@ -141,7 +141,7 @@ namespace client.Gui
             entries.Remove(entry);
         }
 
-        static Metadata entries = new();
+        readonly static Metadata entries = new();
 
         private class InvokeHandler
         {

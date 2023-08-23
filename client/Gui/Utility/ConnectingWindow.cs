@@ -3,7 +3,7 @@
  *  Filename    :   ConnectingWindow.cs
  *  Class       :   ConnectingWindow
  *  
- *  Creater     :   Nictheboy
+ *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
  *  Last Modify :   2023/08/22
  *  
@@ -73,7 +73,7 @@ namespace client.Gui
             this.Border.Effect3DBrush = null;
             this.Border.DrawMarginFrame = true;
             this.Modal = true;
-            this.Add(connectingLable, cancelButton);
+            this.Add(connectingLabel, cancelButton);
             this.Initialized += OnInitialized;
             cancelButton.Clicked += OnCancelButtonClicked;
         }
@@ -114,7 +114,7 @@ namespace client.Gui
             RequestStop();
         }
 
-        readonly Label connectingLable = new()
+        readonly Label connectingLabel = new()
         {
             Text = "Connecting...", // 13 characters
             X = 0,

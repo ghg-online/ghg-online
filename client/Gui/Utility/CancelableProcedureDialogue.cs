@@ -3,7 +3,7 @@
  *  Filename    :   CancelableProcedureDialogue.cs
  *  Class       :   CancelableProcedureDialogue
  *  
- *  Creater     :   Nictheboy
+ *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
  *  Last Modify :   2023/08/22
  *  
@@ -18,7 +18,7 @@ namespace client.Gui
     /// A dialog that can be used to display information about a procedure that can be canceled.
     /// </summary>
     /// <remarks>
-    /// You need to asign a function that will be called when the cancel button is clicked.
+    /// You need to assign a function that will be called when the cancel button is clicked.
     /// </remarks>
     public class CancelableProcedureDialogue : Dialog
     {
