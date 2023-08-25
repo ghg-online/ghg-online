@@ -1,17 +1,35 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using Terminal.Gui;
+using client.Gui;
+using client;
 
-using Grpc.Net.Client;
-using server;
+while (true)
+{
+    Application.Init();
 
-// from http://duoduokou.com/csharp/64085357176954393069.html
-// disable ssl certificate validation
-var httpClientHandler = new HttpClientHandler();
-httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
-var httpClient = new HttpClient(httpClientHandler);
+    WelcomeWindow welcomeWindow = new();
+    welcomeWindow.OnConnectSuccess += (channel) =>
+    {
+        var loginWindow = new LoginWindow(channel);
+        loginWindow.OnLoginSuccess += (channel, token) =>
+        {
+            loginWindow.RequestStop();
+            Application.Top.RemoveAll();
+            VisualGrpc.LoadToken(token);
+            ConnectionInfo.LoadGrpcChannel(channel);
+            ConnectionInfo.LoadUsername(loginWindow.Username!);
+            Application.Top.Add(new MenuBar(new[] { new AccountMenu() }));
+        };
+        Application.Run(loginWindow);
+    };
 
-// connect to server, port = 2333, using https without ssl certificate validation
-var channel = GrpcChannel.ForAddress("https://127.0.0.1:2333", new GrpcChannelOptions() { HttpClient = httpClient });
-
-var client = new Greeter.GreeterClient(channel);
-var response = await client.SayHelloAsync(new HelloRequest { Name = "GreeterClient" }).ResponseAsync;
-Console.WriteLine($"Server reply: {response.Message}");
+    Application.Top.Add(welcomeWindow);
+    try
+    {
+        Application.Run();
+    }
+    catch (Exception e)
+    {
+        ExceptionDialog.Show(e);
+    }
+    Application.Shutdown();
+}
