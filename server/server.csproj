@@ -4,12 +4,13 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<RepositoryUrl>https://github.com/nictheboy/ghg-online</RepositoryUrl>
+		<RepositoryUrl>https://github.com/ghg-online/ghg-online</RepositoryUrl>
 		<Version>0.0.0.1</Version>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Protobuf Include="Protos\computer.proto" GrpcServices="Server" />
 		<Protobuf Include="Protos\account.proto" GrpcServices="Server" />
 	</ItemGroup>
 

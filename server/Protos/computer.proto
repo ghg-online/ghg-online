@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+option csharp_namespace = "server.Protos";
+
+package computer;
+
+service Computer{
+	rpc GetMyComputer (GetMyComputerRequest) returns (GetMyComputerRespond);
+	rpc CreateDirectory (CreateDirectoryRequest) returns (CreateDirectoryRespond);
+	rpc CreateDataFile (CreateDataFileRequest) returns (CreateDataFileRespond);
+	rpc DeleteDirectory (DeleteDirectoryRequest) returns (DeleteDirectoryRespond);
+	rpc DeleteFile (DeleteFileRequest) returns (DeleteFileRespond);
+	rpc RenameDirectory (RenameDirectoryRequest) returns (RenameDirectoryRespond);
+	rpc RenameFile (RenameFileRequest) returns (RenameFileRespond);
+	rpc ModifyDataFile (ModifyDataFileRequest) returns (ModifyDataFileRespond);
+	rpc ListDirectories (ListDirectoriesRequest) returns (ListDirectoriesRespond);
+	rpc ListFiles (ListFilesRequest) returns (ListFilesRespond);
+	rpc GetDirectoryInfo (GetDirectoryInfoRequest) returns (GetDirectoryInfoRespond);
+	rpc GetFileInfo (GetFileInfoRequest) returns (GetFileInfoRespond);
+	rpc FromPathToId (FromPathToIdRequest) returns (FromPathToIdRespond);
+	rpc FromIdToPath (FromIdToPathRequest) returns (FromIdToPathRespond);
+	rpc ReadDataFile (ReadDataFileRequest) returns (ReadDataFileRespond);
+}
+
+
+
+message Guid {
+	bytes data = 1;
+}
+
+message ComputerInfo {
+	Guid id = 1;
+	string name = 2;
+	Guid owner = 3;
+	Guid root_directory = 4;
+}
+
+message DirectoryInfo {
+	Guid id = 1;
+	string name = 2;
+	Guid parent = 3;
+}
+
+message FileInfo {
+	Guid id = 1;
+	string name = 2;
+	Guid parent = 3;
+	string type = 4;
+}
+
+
+
+message GetMyComputerRequest {}
+
+message GetMyComputerRespond {
+	bool success = 1;
+	string message = 2;
+	ComputerInfo info = 3;
+}
+
+
+message CreateDirectoryRequest {
+	Guid parent = 1;
+	string new_directory_name = 2;
+}
+
+message CreateDirectoryRespond {
+	bool success = 1;
+	string message = 2;
+	Guid new_directory = 3;
+}
+
+message CreateDataFileRequest {
+	Guid parent = 1;
+	string file_name = 2;
+	bytes data = 3;
+}
+
+message CreateDataFileRespond {
+	bool success = 1;
+	string message = 2;
+	Guid new_file = 3;
+}
+
+message DeleteDirectoryRequest {
+	Guid directory = 1;
+}
+
+message DeleteDirectoryRespond {
+	bool success = 1;
+	string message = 2;
+}
+
+message DeleteFileRequest {
+	Guid file = 1;
+}
+
+message DeleteFileRespond {
+	bool success = 1;
+	string message = 2;
+}
+
+message RenameDirectoryRequest {
+	Guid directory = 1;
+	string new_name = 2;
+}
+
+message RenameDirectoryRespond {
+	bool success = 1;
+	string message = 2;
+}
+
+message RenameFileRequest {
+	Guid file = 1;
+	string new_name = 2;
+}
+
+message RenameFileRespond {
+	bool success = 1;
+	string message = 2;
+}
+
+message ModifyDataFileRequest {
+	Guid file = 1;
+	bytes data = 2;
+}
+
+message ModifyDataFileRespond {
+	bool success = 1;
+	string message = 2;
+}
+
+message ListDirectoriesRequest {
+	Guid directory = 1;
+}
+
+message ListDirectoriesRespond {
+	bool success = 1;
+	string message = 2;
+	repeated DirectoryInfo infos = 3;
+}
+
+message ListFilesRequest {
+	Guid directory = 1;
+}
+
+message ListFilesRespond {
+	bool success = 1;
+	string message = 2;
+	repeated FileInfo infos = 3;
+}
+
+message GetDirectoryInfoRequest {
+	Guid directory = 1;
+}
+
+message GetDirectoryInfoRespond {
+	bool success = 1;
+	string message = 2;
+	DirectoryInfo info = 3;
+}
+
+message GetFileInfoRequest {
+	Guid file = 1;
+}
+
+message GetFileInfoRespond {
+	bool success = 1;
+	string message = 2;
+	FileInfo info = 3;
+}
+
+message FromPathToIdRequest {
+	Guid root_directory = 1;
+	string path = 2;
+}
+
+message FromPathToIdRespond {
+	bool success = 1;
+	string message = 2;
+	bool is_directory = 3;
+	Guid id = 4;
+}
+
+message FromIdToPathRequest {
+	Guid id = 1;
+}
+
+message FromIdToPathRespond{
+	bool success = 1;
+	string message = 2;
+	bool is_directory = 3;
+	Guid root_directory = 4;
+	string path = 5;
+}
+
+message ReadDataFileRequest {
+	Guid file = 1;
+}
+
+message ReadDataFileRespond {
+	bool success = 1;
+	string message = 2;
+	bytes data = 3;
+}
