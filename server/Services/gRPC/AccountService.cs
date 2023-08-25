@@ -1,11 +1,7 @@
 using server.Entities;
 
 using Grpc.Core;
-using Google.Protobuf;
-using System.Security.Cryptography;
 using System.Text;
-using LiteDB;
-using Microsoft.AspNetCore.Authorization;
 using server.Services.Database;
 using server.Protos;
 using server.Services.Authenticate;

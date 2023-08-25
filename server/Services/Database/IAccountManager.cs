@@ -1,5 +1,4 @@
-﻿using Grpc.Core;
-using server.Entities;
+﻿using server.Entities;
 
 namespace server.Services.Database
 {

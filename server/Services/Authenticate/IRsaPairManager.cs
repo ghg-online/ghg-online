@@ -2,7 +2,7 @@
 
 namespace server.Services.Authenticate
 {
-    public interface IRsaPairManager: IRsaPubkeyManager
+    public interface IRsaPairManager : IRsaPubkeyManager
     {
         public RSA GetPrikey();
     }

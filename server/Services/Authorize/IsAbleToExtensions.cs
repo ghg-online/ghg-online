@@ -1,6 +1,5 @@
 ﻿using server.Entities;
 using static server.Entities.Account;
-using System.Data;
 using server.Services.Authenticate;
 
 namespace server.Services.Authorize

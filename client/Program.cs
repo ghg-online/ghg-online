@@ -27,7 +27,7 @@ while (true)
     {
         Application.Run();
     }
-    catch(Exception e)
+    catch (Exception e)
     {
         ExceptionDialog.Show(e);
     }

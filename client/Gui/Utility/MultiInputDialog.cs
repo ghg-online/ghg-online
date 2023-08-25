@@ -130,8 +130,8 @@ namespace client.Gui
                     Width = inputWidth,
                     Height = 1,
                 };
-                if(values is not null)
-                    if (values[i]is not null)
+                if (values is not null)
+                    if (values[i] is not null)
                         inputField.Text = values[i];
                 Add(inputField);
                 inputFields[i] = inputField;
