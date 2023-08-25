@@ -10,7 +10,6 @@
  */
 
 using Grpc.Net.Client;
-using NStack;
 using server.Protos;
 using Terminal.Gui;
 

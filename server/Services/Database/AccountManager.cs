@@ -10,10 +10,8 @@
  *      
  */
 
-using Grpc.Core;
 using LiteDB;
 using server.Entities;
-using System.Text.RegularExpressions;
 
 namespace server.Services.Database
 {

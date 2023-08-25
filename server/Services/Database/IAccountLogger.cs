@@ -1,5 +1,4 @@
-﻿using LiteDB;
-using static server.Entities.AccountLog;
+﻿using static server.Entities.AccountLog;
 
 namespace server.Services.Database
 {

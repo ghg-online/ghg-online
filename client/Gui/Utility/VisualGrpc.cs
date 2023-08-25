@@ -11,14 +11,11 @@
 
 using Google.Protobuf;
 using Grpc.Core;
-using NStack;
 using System.IdentityModel.Tokens.Jwt;
 using Terminal.Gui;
 
 namespace client.Gui
 {
-    using Timer = System.Timers.Timer;
-
     /// <summary>
     /// This static class is used to invoke gRPC methods and show a waiting dialog.
     /// </summary>

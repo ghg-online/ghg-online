@@ -1,5 +1,4 @@
 ﻿using Grpc.Core;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 using server.Entities;
 using server.Services.Authenticate;

@@ -1,8 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using static server.Entities.Account;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+﻿using static server.Entities.Account;
 
 namespace server.Services.Authenticate
 {

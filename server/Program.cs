@@ -1,4 +1,3 @@
-using LiteDB;
 using server.Services.Authenticate;
 using server.Services.Authorize;
 using server.Services.Database;

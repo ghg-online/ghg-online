@@ -10,8 +10,6 @@
  */
 
 using LiteDB;
-using Microsoft.Extensions.Logging;
-using server.Services;
 
 namespace server.Services.Database
 {

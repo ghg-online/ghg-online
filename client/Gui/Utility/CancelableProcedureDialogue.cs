@@ -65,7 +65,7 @@ namespace client.Gui
         readonly Button cancelButton = new()
         {
             Text = "Cancel",
-            X= Pos.Center(),
+            X = Pos.Center(),
         };
     }
 }
