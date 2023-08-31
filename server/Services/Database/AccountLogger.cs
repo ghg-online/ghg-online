@@ -18,16 +18,14 @@ namespace server.Services.Database
 {
     public class AccountLogger : IAccountLogger
     {
-        private readonly ILiteDatabase _db_lock; // used for locking
         private readonly ILiteCollection<AccountLog> _accountLogs;
         public AccountLogger(IDbHolder dbHolder)
         {
-            _db_lock = dbHolder.DbAccountServiceLog;
-            _accountLogs = dbHolder.DbAccountServiceLog.GetCollection<AccountLog>();
+            _accountLogs = dbHolder.AccountLogs;
         }
         public void WriteLog(AccountLogType type, string? ip, string? userName, bool success, string? appendix)
         {
-            lock (_db_lock) _accountLogs.Insert(new AccountLog
+            _accountLogs.Insert(new AccountLog
             {
                 Type = type,
                 Time = DateTime.Now,

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace server.Entities
+﻿namespace server.Entities
 {
     public class File
     {
@@ -12,6 +6,7 @@ namespace server.Entities
         public string Name { get; set; }
         public bool IsDeleted { get; set; }
 
+        public Guid Computer { get; set; }
         public Guid Parent { get; set; }
         public TypeCode Type { get; set; }
 
@@ -23,12 +18,19 @@ namespace server.Entities
             Executable = 4,
             Invokable = 8,
         }
+        // For data files stored in the server database, TypeCode = Writable | Readable
 
-        public File(Guid id, string name, bool isDeleted, Guid parent, TypeCode type)
+        public File()
+        {
+            Name = string.Empty;
+        }
+
+        public File(Guid id, string name, bool isDeleted, Guid computer, Guid parent, TypeCode type)
         {
             Id = id;
             Name = name;
             IsDeleted = isDeleted;
+            Computer = computer;
             Parent = parent;
             Type = type;
         }

@@ -15,6 +15,10 @@ builder.Services.AddSingleton<AuthHelper>();
 builder.Services.AddSingleton<IAccountLogger, AccountLogger>();
 builder.Services.AddSingleton<IAccountManager, AccountManager>();
 builder.Services.AddSingleton<IActivationCodeManager, ActivationCodeManager>();
+builder.Services.AddSingleton<IComputerManager, ComputerManager>();
+builder.Services.AddSingleton<IFileDataManager, FileDataManager>();
+builder.Services.AddSingleton<IFileSystemManager, FileSystemManager>();
+builder.Services.AddSingleton<ITransactionController, TransactionController>();
 builder.Services.AddSingleton<IDbHolder, DbHolder>();
 var app = builder.Build();
 

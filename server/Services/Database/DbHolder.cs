@@ -15,109 +15,170 @@ namespace server.Services.Database
 {
     public class DbHolder : IDbHolder, IDisposable
     {
-        private readonly ILogger _logger;
-        private readonly LiteDatabase _db_account_service;
-        private readonly LiteDatabase _db_account_service_log;
-        private static string? _db_account_service_connection_string = null;
-        private static string? _db_account_service_log_connection_string = null;
+        private readonly ILiteDatabase db;
+        private readonly ILogger<DbHolder> logger;
+
+        private readonly ILiteCollection<Entities.Account> accounts;
+        private readonly ILiteCollection<Entities.AccountLog> accountLogs;
+        private readonly ILiteCollection<Entities.ActivationCode> activationCodes;
+        private readonly ILiteCollection<Entities.Computer> computers;
+        private readonly ILiteCollection<Entities.Directory> directories;
+        private readonly ILiteCollection<Entities.File> files;
+        private readonly ILiteCollection<Entities.FileData> fileData;
+
+        // Configurations for LiteDB, see https://www.litedb.org/docs/connection-string/
+        private readonly string db_filename;
+        private readonly string db_connection;
+        private readonly string db_password;
+        private readonly string db_initial_size;
+        private readonly string db_readonly;
+        private readonly string db_collation; // see https://www.litedb.org/docs/collation/
+        private readonly string db_upgrade;
+
+        // Connection string for LiteDB
+        private readonly string db_connection_string;
 
         public DbHolder(ILogger<DbHolder> logger, IConfiguration configuration)
         {
-            _logger = logger;
+            this.logger = logger;
+            db_filename = Path.Combine(configuration["Data:BasePath"]
+                , configuration["Data:Directory:LiteDB"], configuration["Data:Filename:LiteDB"]);
+            db_connection = configuration["Data:LiteDBConfig:Connection"];
+            db_password = configuration["Data:LiteDBConfig:Password"];
+            db_initial_size = configuration["Data:LiteDBConfig:InitialSize"];
+            db_readonly = configuration["Data:LiteDBConfig:Readonly"];
+            db_collation = configuration["Data:LiteDBConfig:Collation"];
+            db_upgrade = configuration["Data:LiteDBConfig:Upgrade"];
 
-            if (_db_account_service_connection_string == null)
-            {
-                string dbPath = Path.Combine(configuration["Data:BasePath"], configuration["Data:Directory:LiteDB"]);
-                if (Directory.Exists(dbPath) == false) Directory.CreateDirectory(dbPath);
-                _db_account_service_connection_string = MakeConnectionString(dbPath, "account_service.db");
-                logger.LogInformation("{str}", _db_account_service_connection_string);
-                if (!File.Exists(Path.Combine(dbPath, "account_service.db")))
-                {
-                    CreateDbAccountService();
-                }
-            }
-            _db_account_service = new LiteDatabase(_db_account_service_connection_string);
+            db_connection_string = $"Filename={db_filename};Connection={db_connection};Password={db_password};InitialSize={db_initial_size};ReadOnly={db_readonly};Upgrade={db_upgrade};Collation={db_collation}";
 
-            if (_db_account_service_log_connection_string == null)
+            if (false == File.Exists(db_filename))
             {
-                string dbPath = Path.Combine(configuration["Data:BasePath"], configuration["Data:Directory:LiteDB"]);
-                _db_account_service_log_connection_string = MakeConnectionString(dbPath, "account_service.log.db");
-                logger.LogInformation("{str}", _db_account_service_log_connection_string);
-                if (!File.Exists(Path.Combine(dbPath, "account_service.log.db")))
-                {
-                    CreateDbAccountServiceLog();
-                }
+                CreateDb();
             }
-            _db_account_service_log = new LiteDatabase(_db_account_service_log_connection_string);
+
+            db = new LiteDatabase(db_connection_string);
+            accounts = db.GetCollection<Entities.Account>();
+            accountLogs = db.GetCollection<Entities.AccountLog>();
+            activationCodes = db.GetCollection<Entities.ActivationCode>();
+            computers = db.GetCollection<Entities.Computer>();
+            directories = db.GetCollection<Entities.Directory>();
+            files = db.GetCollection<Entities.File>();
+            fileData = db.GetCollection<Entities.FileData>();
         }
 
-        private static string MakeConnectionString(string path, string filename)
+        private void CreateDb()
         {
-            // return $"Filename={Path.Combine(path, filename)};Connection=Shared";
-            return $"Filename={Path.Combine(path, filename)};Connection=Direct";
+            using var db = new LiteDatabase(db_connection_string);
+            CreateAccounts(db);
+            CreateAccountLogs(db);
+            CreateActivationCodes(db);
+            CreateComputers(db);
+            CreateDirectories(db);
+            CreateFiles(db);
+            CreateFileData(db);
         }
 
-        public ILiteDatabase DbAccountService
+        private void CreateAccounts(ILiteDatabase db)
         {
-            get
-            {
-                return _db_account_service;
-            }
+            logger.LogInformation("Creating collection Account and default admin");
+            var col = db.GetCollection<Entities.Account>();
+            col.EnsureIndex(x => x.Id, true);
+            col.EnsureIndex(x => x.Username, true);
+            col.Insert(new Entities.Account
+            (
+                id: Guid.NewGuid(),
+                username: "admin",
+                passwordHash: Entities.Account.HashCode("admin", "admin"),
+                status: Entities.Account.StatusCode.Activated,
+                role: Entities.Account.RoleCode.Admin
+            ));
         }
 
-        public ILiteDatabase DbAccountServiceLog
+        private void CreateActivationCodes(ILiteDatabase db)
         {
-            get
+            logger.LogInformation("Creating collection ActivationCode");
+            var col = db.GetCollection<Entities.ActivationCode>();
+            col.EnsureIndex(x => x.Id, true);
+            col.EnsureIndex(x => x.Code, true);
+        }
+
+        private void CreateAccountLogs(ILiteDatabase db)
+        {
+            logger.LogInformation("Creating collection AccountLog");
+            var col = db.GetCollection<Entities.AccountLog>();
+            col.Insert(new Entities.AccountLog
             {
-                return _db_account_service_log;
-            }
+                Type = Entities.AccountLog.AccountLogType.Information,
+                Time = DateTime.Now,
+                Ip = null,
+                UserName = null,
+                Success = true,
+                Appendix = "Account service log created",
+            });
+        }
+
+        private void CreateComputers(ILiteDatabase db)
+        {
+            logger.LogInformation("Creating collection Computer");
+            var col = db.GetCollection<Entities.Computer>();
+            col.EnsureIndex(x => x.Id, true);
+            col.EnsureIndex(x => x.Owner, false);
+        }
+
+        private void CreateDirectories(ILiteDatabase db)
+        {
+            logger.LogInformation("Creating collection Directory");
+            var col = db.GetCollection<Entities.Directory>();
+            col.EnsureIndex(x => x.Id, true);
+            col.EnsureIndex(x => x.Computer, false);
+            col.EnsureIndex(x => x.Parent, false);
+        }
+
+        private void CreateFiles(ILiteDatabase db)
+        {
+            logger.LogInformation("Creating collection File");
+            var col = db.GetCollection<Entities.File>();
+            col.EnsureIndex(x => x.Id, true);
+            col.EnsureIndex(x => x.Computer, false);
+            col.EnsureIndex(x => x.Parent, false);
+        }
+
+        private void CreateFileData(ILiteDatabase db)
+        {
+            logger.LogInformation("Creating collection FileData");
+            var col = db.GetCollection<Entities.FileData>();
+            col.EnsureIndex(x => x.Id, true);
+            col.EnsureIndex(x => x.Computer, false);
         }
 
         public void Dispose()
         {
-            _db_account_service.Dispose();
+            db.Dispose();
             GC.SuppressFinalize(this);
         }
 
-        private void CreateDbAccountService()
+        public ILiteCollection<Entities.Account> Accounts => accounts;
+        public ILiteCollection<Entities.AccountLog> AccountLogs => accountLogs;
+        public ILiteCollection<Entities.ActivationCode> ActivationCodes => activationCodes;
+        public ILiteCollection<Entities.Computer> Computers => computers;
+        public ILiteCollection<Entities.Directory> Directories => directories;
+        public ILiteCollection<Entities.File> Files => files;
+        public ILiteCollection<Entities.FileData> FileData => fileData;
+
+        public bool BeginTrans()
         {
-            _logger.LogInformation("Creating account_service.db and default admin");
-            using (var db = new LiteDatabase(_db_account_service_connection_string))
-            {
-                var col = db.GetCollection<Entities.Account>();
-
-                col.EnsureIndex(x => x.Username);
-
-                col.Insert(new Entities.Account
-                (
-                    id: Guid.NewGuid(),
-                    username: "admin",
-                    passwordHash: Entities.Account.HashCode("admin", "admin"),
-                    status: Entities.Account.StatusCode.Activated,
-                    role: Entities.Account.RoleCode.Admin
-                ));
-
-                var col2 = db.GetCollection<Entities.ActivationCode>();
-                col2.EnsureIndex(x => x.Code, true);
-            }
+            return db.BeginTrans();
         }
 
-        private void CreateDbAccountServiceLog()
+        public bool Commit()
         {
-            _logger.LogInformation("Creating account_service.log.db");
-            using (var db = new LiteDatabase(_db_account_service_log_connection_string))
-            {
-                var col = db.GetCollection<Entities.AccountLog>();
-                col.Insert(new Entities.AccountLog
-                {
-                    Type = Entities.AccountLog.AccountLogType.Information,
-                    Time = DateTime.Now,
-                    Ip = null,
-                    UserName = null,
-                    Success = true,
-                    Appendix = "Account service log created",
-                });
-            }
+            return db.Commit();
+        }
+
+        public bool Rollback()
+        {
+            return db.Rollback();
         }
     }
 }

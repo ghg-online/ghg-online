@@ -8,15 +8,37 @@ namespace server.Services.Authorize
 {
     public class AuthHelper
     {
-        readonly ILogger<AuthHelper> logger;
         readonly IAccountManager accountManager;
+        readonly IComputerManager computerManager;
         readonly ITokenService tokenService;
 
-        public AuthHelper(IAccountManager accountManager, ITokenService tokenService, ILogger<AuthHelper> logger)
+        public AuthHelper(IAccountManager accountManager, IComputerManager computerManager, ITokenService tokenService)
         {
             this.accountManager = accountManager;
+            this.computerManager = computerManager;
             this.tokenService = tokenService;
-            this.logger = logger;
+        }
+
+        public TokenInfo GetValidatedToken(ServerCallContext context)
+        {
+            string token = context.RequestHeaders.GetValue("Authorization")?.Replace("Bearer ", "")
+                    ?? throw new RpcException(new Status(StatusCode.Unauthenticated, "Authentication required"));
+            if (string.IsNullOrEmpty(token))
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Empty token"));
+            TokenInfo tokenInfo;
+            try
+            {
+                tokenInfo = tokenService.VerifyTokenAndGetInfo(token);
+            }
+            catch (SecurityTokenValidationException)
+            {
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+            }
+            catch (System.Exception)
+            {
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Internal error"));
+            }
+            return tokenInfo;
         }
 
         public void EnsurePermission(string token, out string username, string action, string? resource1 = null)
@@ -78,6 +100,14 @@ namespace server.Services.Authorize
                     throw new RpcException(new Status(StatusCode.PermissionDenied, "Permission denied"));
                 username = tokenInfo.Username;
             }
+        }
+
+        public void EnsurePermissionForComputer(ServerCallContext context, Guid computerId)
+        {
+            var tokenInfo = GetValidatedToken(context);
+            var computer = computerManager.QueryComputerById(computerId);
+            if (tokenInfo.Id != computer.Owner)
+                throw new RpcException(new Status(StatusCode.PermissionDenied, "Permission denied"));
         }
     }
 }

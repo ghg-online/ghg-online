@@ -14,15 +14,22 @@ public sealed class AccountService : Protos.Account.AccountBase
     private readonly IActivationCodeManager _activationCodeManager;
     private readonly IAccountManager _accountManager;
     private readonly IAccountLogger _accountLogger;
+    private readonly IComputerManager _computerManager;
+    private readonly IFileSystemManager _fileSystemManager;
+    private readonly ITransactionController _transCtrl;
     private readonly ITokenService _tokenService;
     private readonly AuthHelper _authHelper;
 
     public AccountService(IActivationCodeManager activationCodeManager, IAccountManager accountManager
-        , IAccountLogger accountLogger, ITokenService tokenService, AuthHelper authHelper)
+        , IComputerManager computerManager, IFileSystemManager fileSystemManager, IAccountLogger accountLogger
+        , ITransactionController transCtrl, ITokenService tokenService, AuthHelper authHelper)
     {
         _activationCodeManager = activationCodeManager;
         _accountManager = accountManager;
         _accountLogger = accountLogger;
+        _computerManager = computerManager;
+        _fileSystemManager = fileSystemManager;
+        _transCtrl = transCtrl;
         _tokenService = tokenService;
         _authHelper = authHelper;
     }
@@ -99,8 +106,19 @@ public sealed class AccountService : Protos.Account.AccountBase
             return Task.FromResult(new RegisterResponse { Success = false, Message = "Username already exists!" });
         }
 
+        _transCtrl.BeginTrans();
         _activationCodeManager.UseCode(request.ActivationCode);
         _accountManager.CreateAccount(request.Username, request.Password, Entities.Account.RoleCode.User);
+        Guid account = _accountManager.QueryAccount(request.Username).Id;
+        Guid computer = _computerManager.CreateComputer($"{request.Username}'s computer", account, Guid.Empty);
+        Guid rootDir = _fileSystemManager.CreateDirectory(computer, Guid.Empty, string.Empty);
+        _computerManager.ModifyRootDirectory(computer, rootDir);
+        _fileSystemManager.CreateDirectory(computer, rootDir, "bin");
+        _fileSystemManager.CreateDirectory(computer, rootDir, "home");
+        _fileSystemManager.CreateDirectory(computer, rootDir, "lib");
+        _fileSystemManager.CreateDirectory(computer, rootDir, "usr");
+        _fileSystemManager.CreateDirectory(computer, rootDir, "var");
+        _transCtrl.Commit();
         _accountLogger.WriteLog(accountLogType, context.Peer, request.Username, true, "Register success");
 
         return Task.FromResult(new RegisterResponse { Success = true, Message = "Register success!" });

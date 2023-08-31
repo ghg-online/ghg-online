@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+option csharp_namespace = "server.Protos";
+
+package file_system;
+
+service FileSystem {
+	rpc CreateDirectory (CreateDirectoryRequest) returns (CreateDirectoryRespond);
+	rpc CreateDataFile (CreateDataFileRequest) returns (CreateDataFileRespond);
+	rpc DeleteDirectory (DeleteDirectoryRequest) returns (DeleteDirectoryRespond);
+	rpc DeleteFile (DeleteFileRequest) returns (DeleteFileRespond);
+	rpc RenameDirectory (RenameDirectoryRequest) returns (RenameDirectoryRespond);
+	rpc RenameFile (RenameFileRequest) returns (RenameFileRespond);
+	rpc ModifyDataFile (ModifyDataFileRequest) returns (ModifyDataFileRespond);
+	rpc ListDirectories (ListDirectoriesRequest) returns (ListDirectoriesRespond);
+	rpc ListFiles (ListFilesRequest) returns (ListFilesRespond);
+	rpc GetDirectoryInfo (GetDirectoryInfoRequest) returns (GetDirectoryInfoRespond);
+	rpc GetFileInfo (GetFileInfoRequest) returns (GetFileInfoRespond);
+	rpc FromPathToId (FromPathToIdRequest) returns (FromPathToIdRespond);
+	rpc FromIdToPath (FromIdToPathRequest) returns (FromIdToPathRespond);
+	rpc ReadDataFile (ReadDataFileRequest) returns (ReadDataFileRespond);
+}
+
+message DirectoryInfo {
+	bytes id = 1;
+	string name = 2;
+	bytes parent = 3;
+}
+
+message FileInfo {
+	bytes id = 1;
+	string name = 2;
+	bytes parent = 3;
+	string type = 4;
+}
+
+message CreateDirectoryRequest {
+	bytes computer = 1;
+	bytes parent = 2;
+	string directory_name = 3;
+}
+
+message CreateDirectoryRespond {
+	bytes directory = 1;
+}
+
+message CreateDataFileRequest {
+	bytes computer = 1;
+	bytes parent = 2;
+	string file_name = 3;
+	bytes data = 4;
+}
+
+message CreateDataFileRespond {
+	bytes file = 1;
+}
+
+message DeleteDirectoryRequest {
+	bytes computer = 1;
+	bytes directory = 2;
+	bool Recursive = 3;
+}
+
+message DeleteDirectoryRespond {}
+
+message DeleteFileRequest {
+	bytes computer = 1;
+	bytes file = 2;
+}
+
+message DeleteFileRespond {}
+
+message RenameDirectoryRequest {
+	bytes computer = 1;
+	bytes directory = 2;
+	string name = 3;
+}
+
+message RenameDirectoryRespond {}
+
+message RenameFileRequest {
+	bytes computer = 1;
+	bytes file = 2;
+	string name = 3;
+}
+
+message RenameFileRespond {}
+
+message ModifyDataFileRequest {
+	bytes computer = 1;
+	bytes file = 2;
+	bytes data = 3;
+}
+
+message ModifyDataFileRespond {}
+
+message ListDirectoriesRequest {
+	bytes computer = 1;
+	bytes directory = 2;
+}
+
+message ListDirectoriesRespond {
+	repeated DirectoryInfo infos = 1;
+}
+
+message ListFilesRequest {
+	bytes computer = 1;
+	bytes directory = 2;
+}
+
+message ListFilesRespond {
+	repeated FileInfo infos = 1;
+}
+
+message GetDirectoryInfoRequest {
+	bytes computer = 1;
+	bytes directory = 2;
+}
+
+message GetDirectoryInfoRespond {
+	DirectoryInfo info = 1;
+}
+
+message GetFileInfoRequest {
+	bytes computer = 1;
+	bytes file = 2;
+}
+
+message GetFileInfoRespond {
+	FileInfo info = 1;
+}
+
+message FromPathToIdRequest {
+	bytes computer = 1;
+	bytes start_directory = 2;
+	string path = 3;
+}
+
+message FromPathToIdRespond {
+	bool is_directory = 1;
+	bytes id = 2;
+}
+
+message FromIdToPathRequest {
+	bytes computer = 1;
+	bytes id = 2;
+}
+
+message FromIdToPathRespond{
+	bool is_directory = 1;
+	string path = 2;
+}
+
+message ReadDataFileRequest {
+	bytes computer = 1;
+	bytes file = 2;
+}
+
+message ReadDataFileRespond {
+	bytes data = 1;
+}

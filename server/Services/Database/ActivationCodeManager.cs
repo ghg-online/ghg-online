@@ -17,43 +17,29 @@ namespace server.Services.Database
 {
     public class ActivationCodeManager : IActivationCodeManager
     {
-        private readonly ILiteDatabase _db_lock; // used for locking and transactions
         private readonly ILiteCollection<ActivationCode> _activationCodes;
-        private readonly ILogger<ActivationCodeManager> _logger;
 
-        public ActivationCodeManager(IDbHolder dbHolder, ILogger<ActivationCodeManager> logger)
+        public ActivationCodeManager(IDbHolder dbHolder)
         {
-            _db_lock = dbHolder.DbAccountService;
-            _activationCodes = dbHolder.DbAccountService.GetCollection<ActivationCode>();
-            _logger = logger;
+            _activationCodes = dbHolder.ActivationCodes;
         }
 
-        string IActivationCodeManager.CreateCode()
+        public string CreateCode()
         {
             ActivationCode activationCode = new();
-            lock (_db_lock) _activationCodes.Insert(activationCode);
+            _activationCodes.Insert(activationCode);
             return activationCode.Code;
         }
 
-        void IActivationCodeManager.UseCode(string Code)
+        public void UseCode(string Code)
         {
-            lock (_db_lock)
-            {
-                _db_lock.BeginTrans();
-                ActivationCode activationCode = _activationCodes.FindOne(x => x.Code == Code);
-                if (activationCode == null)
-                {
-                    _logger.LogError("An activation code that not exists is tried to be used");
-                    throw new Exception("An activation code that not exists is tried to be used");
-                }
-                _activationCodes.Delete(activationCode.Id);
-                _db_lock.Commit();
-            }
+            ActivationCode activationCode = _activationCodes.FindOne(x => x.Code == Code);
+            _activationCodes.Delete(activationCode.Id);
         }
 
-        bool IActivationCodeManager.VerifyCode(string Code)
+        public bool VerifyCode(string Code)
         {
-            lock (_db_lock) return _activationCodes.Exists(x => x.Code == Code);
+            return _activationCodes.Exists(x => x.Code == Code);
         }
     }
 }

@@ -10,14 +10,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Protobuf Include="Protos\computer.proto" GrpcServices="Server" />
 		<Protobuf Include="Protos\account.proto" GrpcServices="Server" />
+		<Protobuf Include="Protos\computer.proto" GrpcServices="Server" />
+		<Protobuf Include="Protos\file_system.proto" GrpcServices="Server" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.AspNetCore" Version="2.56.0-pre2" />
 		<PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.56.0-pre2" />
 		<PackageReference Include="LiteDB" Version="5.0.17" />
+		<PackageReference Include="Microsoft.DependencyValidation.Analyzers" Version="0.11.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0-preview2" />
 	</ItemGroup>
 
