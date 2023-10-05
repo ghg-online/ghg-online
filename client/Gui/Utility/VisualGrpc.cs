@@ -5,7 +5,10 @@
  *  
  *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/08/23
+ *  Last Modify :   2023/09/24
+ *  
+ *  Change Log:
+ *      2023/9/24   fix a double close bug when user click the cancel button
  *  
  */
 
@@ -126,7 +129,7 @@ namespace client.Gui
         /// So, you don't need to delete your token in other places.
         /// We hope that this design can be obeyed both for security and convenience.
         /// <para>
-        /// A similar place that holds user's data is ConnectionInfo,
+        /// A similar place that holds user's termColors is ConnectionInfo,
         /// but information there is less sensitive.
         /// </para>
         /// </remarks>
@@ -183,7 +186,15 @@ namespace client.Gui
                     Application.MainLoop.RemoveTimeout(noticeTimer);
                     Application.MainLoop.RemoveTimeout(timeOutTimer);
                     //Application.MainLoop.Invoke(() => {
-                    dialog?.RequestStop();
+
+                    // ## Before change on 2023/9/24:
+                    // dialog?.RequestStop();
+                    // ## After change on 2023/9/24:
+                    if (dialog is not null && dialog.IsCanceled == false)
+                        dialog.RequestStop();
+                    // ## End of change on 2023/9/24
+                    // ## This change is to fix a double close bug when user click the cancel button.
+
                     await Task.Delay(1); // wait for the dialog to close
                     //});
                 }

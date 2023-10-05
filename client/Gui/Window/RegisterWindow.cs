@@ -5,7 +5,7 @@
  *  
  *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/08/23
+ *  Last Modify :   2023/08/31
  *  
  */
 
@@ -46,17 +46,16 @@ namespace client.Gui
         public RegisterWindow(GrpcChannel grpcChannel)
         {
             Width = 48;
-            Height = 11;
+            Height = 12;
             X = Pos.Center();
             Y = Pos.Center();
             Modal = true;
             this.Border.Effect3D = true;
             Title = "GHG Online Register";
-            this.Add(createYourOwnAccountLabel, usernameLabel, usernameField, passwordLabel
-                , passwordField, registerButton);
+            this.Add(statusBar, createYourOwnAccountLabel, usernameLabel
+                , usernameField, passwordLabel, passwordField, registerButton);
             Initialized += OnInitialized;
             registerButton.Clicked += OnRegisterButtonClicked;
-            KeyPress += OnKeyPress;
             OnRegisterSuccess += (GrpcChannel grpcChannel) => { };
             GrpcChannel = grpcChannel;
         }
@@ -103,14 +102,6 @@ namespace client.Gui
             }
         }
 
-        private void OnKeyPress(KeyEventEventArgs obj)
-        {
-            if (obj.KeyEvent.Key == Key.Esc)
-            {
-                Application.RequestStop();
-            }
-        }
-
         void GetActivationCode()
         {
             bool result = InputDialog.Query("Activation Code", info, "Code: "
@@ -122,6 +113,14 @@ namespace client.Gui
         }
 
         string? activationCode = null;
+
+        readonly private Terminal.Gui.StatusBar statusBar = new()
+        {
+            Items = new[]
+            {
+                new StatusItem(Key.Esc, "~ESC~ Exit", () => Application.RequestStop()),
+            },
+        };
 
         readonly private Terminal.Gui.Label createYourOwnAccountLabel = new()
         {

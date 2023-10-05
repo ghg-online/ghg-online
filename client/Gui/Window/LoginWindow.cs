@@ -5,7 +5,7 @@
  *  
  *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/08/22
+ *  Last Modify :   2023/08/31
  *  
  */
 
@@ -55,17 +55,16 @@ namespace client.Gui
         public LoginWindow(GrpcChannel grpcChannel)
         {
             Width = 48;
-            Height = 11;
+            Height = 12;
             X = Pos.Center();
             Y = Pos.Center();
             Modal = true;
             Border.Effect3D = true;
             Title = "GHG Online Login";
-            this.Add(loginToServerLabel, usernameLabel, usernameField, passwordLabel
+            this.Add(statusBar, loginToServerLabel, usernameLabel, usernameField, passwordLabel
                 , passwordField, registerButton, loginButton);
             registerButton.Clicked += OnRegisterButtonClicked;
             loginButton.Clicked += OnLoginButtonClicked;
-            KeyPress += OnKeyPress;
             OnLoginSuccess += (_, _) => { };
             GrpcChannel = grpcChannel;
             accountClient = new Account.AccountClient(GrpcChannel);
@@ -108,15 +107,15 @@ namespace client.Gui
             }
         }
 
-        private void OnKeyPress(KeyEventEventArgs obj)
-        {
-            if (obj.KeyEvent.Key == Key.Esc)
-            {
-                Application.RequestStop();
-            }
-        }
-
         readonly Account.AccountClient accountClient;
+
+        readonly private Terminal.Gui.StatusBar statusBar = new()
+        {
+            Items = new[]
+            {
+                new StatusItem(Key.Esc, "~ESC~ Exit", () => Application.RequestStop()),
+            },
+        };
 
         readonly private Terminal.Gui.Label loginToServerLabel = new()
         {

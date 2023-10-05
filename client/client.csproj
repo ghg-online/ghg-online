@@ -14,8 +14,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0-preview2" />
-    <PackageReference Include="Terminal.Gui" Version="1.13.5" />
+    <PackageReference Include="Terminal.Gui" Version="1.15.0-pre.4" />
+    <PackageReference Include="Terminal.ScreenLibrary" Version="0.2.1-beta" />
   </ItemGroup>
 
   <ItemGroup>
