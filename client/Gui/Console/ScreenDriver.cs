@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-using Terminal.Gui;
-using Terminal.ScreenLibrary;
+﻿using Terminal.ScreenLibrary;
 using SysColor = System.Drawing.Color;
 
 namespace client.Gui.Console
