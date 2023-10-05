@@ -1,6 +1,9 @@
 # Ignore LiteDB database files
 *.db
 
+# Ignore rsa keys
+server/JwtRsa/
+
 # From https://github.com/github/gitignore/blob/main/community/DotNet/core.gitignore
 
 *.swp
