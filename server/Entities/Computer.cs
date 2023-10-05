@@ -3,7 +3,7 @@
     public class Computer
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } // should not be empty
         public bool IsDeleted { get; set; }
 
         public Guid Owner { get; set; }
@@ -19,6 +19,13 @@
             Owner = owner;
             Name = name;
             RootDirectory = rootDirectory;
+        }
+
+        public static bool IsNameValid(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return false;
+            return true;
         }
     }
 }

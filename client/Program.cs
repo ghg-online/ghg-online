@@ -48,7 +48,7 @@ while (true)
             Application.Top.Add(console);
             console.Run((pipe) =>
             {
-                new GhgMain(new GhgApi(pipe)).Run();
+                new ApplicationWrapper(new GhgApi(pipe), new GhgMain(new GhgApi(pipe))).Run();
             });
         };
         Application.Run(loginWindow);

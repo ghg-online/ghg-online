@@ -22,5 +22,14 @@
             Computer = computer;
             Parent = parent;
         }
+
+        public static bool IsNameValid(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return false;
+            if (name.Contains('/') || name.Contains('\0'))
+                return false;
+            return true;
+        }
     }
 }
