@@ -10,7 +10,7 @@
             var dirInfo = new DirectoryInfo()
             {
                 Id = directory.Id.ToByteString(),
-                Name = directory.Name,
+                Name = directory.Name ?? string.Empty,
                 Parent = directory.Parent.ToByteString(),
             };
             return dirInfo;

@@ -3,7 +3,7 @@
     public class Directory
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; } // Only for root directory can Name be null
         public bool IsDeleted { get; set; }
 
         public Guid Computer { get; set; }

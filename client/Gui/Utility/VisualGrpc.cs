@@ -5,15 +5,18 @@
  *  
  *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/09/24
+ *  Last Modify :   2023/10/05
  *  
  *  Change Log:
- *      2023/9/24   fix a double close bug when user click the cancel button
+ *      2023/09/24   fix a double close bug when user click the cancel button
+ *      2023/10/05   add support for synchronous invoke and its error handling
+ *      2023/10/06   changed default time to show waiting dialog to 300ms
  *  
  */
 
 using Google.Protobuf;
 using Grpc.Core;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using Terminal.Gui;
 
@@ -56,8 +59,8 @@ namespace client.Gui
         /// </example>
         /// <remarks>
         /// <para>
-        /// This method is equivalent to <code>InvokeAsync(func, request, 30, -1);</code>,
-        /// which means the waiting dialog will be shown after 30 milliseconds, and the invoke will not timeout.
+        /// This method is equivalent to <code>InvokeAsync(func, request, 300, -1);</code>,
+        /// which means the waiting dialog will be shown after 300 milliseconds, and the invoke will not timeout.
         /// </para>
         /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
         /// </remarks>
@@ -65,7 +68,41 @@ namespace client.Gui
             where TRequest : IBufferMessage
             where TRespond : IBufferMessage, new()
         {
-            return await InvokeAsync(func, request, 30, -1);
+            return await InvokeAsync(func, request, 300, -1);
+        }
+
+
+        /// <summary>
+        /// Invoke a gRPC method and show a waiting dialog.
+        /// </summary>
+        /// <typeparam name="TRequest">Type name of your gRPC request</typeparam>
+        /// <typeparam name="TRespond">Type name of your gRPC respond</typeparam>
+        /// <param name="func">Async version of your gRPC procedure, such as LoginAsync</param>
+        /// <param name="request">The request you will send</param>
+        /// <returns>A task that will contain your respond</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is equivalent to <code>Invoke(func, request, 300, -1);</code>,
+        /// which means the waiting dialog will be shown after 300 milliseconds, and the invoke will not timeout.
+        /// </para>
+        /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
+        /// </remarks>
+
+        // This function is added on 2023/10/05
+        public static TRespond Invoke<TRequest, TRespond>(Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TRespond>> func, TRequest request)
+            where TRequest : IBufferMessage
+            where TRespond : IBufferMessage, new()
+        {
+            var task = InvokeAsync(func, request);
+            try
+            {
+                return task.Result;
+            }
+            catch (AggregateException e)
+            {
+                Debug.Assert(e.InnerExceptions.Count == 1);
+                throw e.InnerExceptions[0];
+            }
         }
 
         /// <summary>
@@ -101,6 +138,41 @@ namespace client.Gui
                 respond = await func(request, entries, null, cancellationToken);
             });
             return respond;
+        }
+
+        /// <summary>
+        /// Invoke a gRPC method, show a waiting dialog, and cancel the invoke automatically if timeout.
+        /// </summary>
+        /// <typeparam name="TRequest">Type name of your gRPC request</typeparam>
+        /// <typeparam name="TRespond">Type name of your gRPC respond</typeparam>
+        /// <param name="func">Async version of your gRPC procedure, such as LoginAsync</param>
+        /// <param name="request">The request you will send</param>
+        /// <param name="showWait">How many milliseconds before the dialog is shown. Zero means immediately. Negative number means never.</param>
+        /// <param name="timeOut">How many milliseconds before the invoke timeout. Negative number means never.</param>
+        /// <returns>A task that will contain your respond</returns>
+        /// <remarks>
+        /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
+        /// </remarks>
+
+        // This function is added on 2023/10/05
+        public static TRespond Invoke<TRequest, TRespond>(
+            Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TRespond>> func,
+            TRequest request,
+            int showWait,
+            int timeOut
+        ) where TRequest : IBufferMessage
+            where TRespond : IBufferMessage, new()
+        {
+            var task = InvokeAsync(func, request, showWait, timeOut);
+            try
+            {
+                return task.Result;
+            }
+            catch (AggregateException e)
+            {
+                Debug.Assert(e.InnerExceptions.Count == 1);
+                throw e.InnerExceptions[0];
+            }
         }
 
         /// <summary>

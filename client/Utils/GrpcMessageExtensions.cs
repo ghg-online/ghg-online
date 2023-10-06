@@ -30,7 +30,7 @@ namespace client.Utils
                 computer,
                 directoryInfo.Id.ToGuid(),
                 directoryInfo.Parent.ToGuid(),
-                directoryInfo.Name
+                directoryInfo.Name == string.Empty ? null : directoryInfo.Name
             );
         }
 

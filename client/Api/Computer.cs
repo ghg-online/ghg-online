@@ -1,4 +1,5 @@
 ﻿using client.Gui;
+using client.Utils;
 using Grpc.Core;
 using server.Protos;
 using server.Services.gRPC.Extensions;
@@ -42,6 +43,16 @@ namespace client.Api
             }
         }
 
+        public IDirectory GetDirectoryById(Guid directoryId)
+        {
+            return new Directory(fileSystemClient, computerId, directoryId);
+        }
+
+        public IFile GetFileById(Guid fileId)
+        {
+            return new File(fileSystemClient, computerId, fileId);
+        }
+
         public async Task<bool> IsDirectoryAsync(Guid id)
         {
             var request = new FromIdToPathRequest
@@ -66,7 +77,7 @@ namespace client.Api
 
         public bool IsDirectory(Guid id)
         {
-            return IsDirectoryAsync(id).Result;
+            return IsDirectoryAsync(id).GetResultWithoutAggragateException();
         }
 
         public async Task<string> FromIdToPathAsync(Guid id)
@@ -93,7 +104,7 @@ namespace client.Api
 
         public string FromIdToPath(Guid id)
         {
-            return FromIdToPathAsync(id).Result;
+            return FromIdToPathAsync(id).GetResultWithoutAggragateException();
         }
     }
 }

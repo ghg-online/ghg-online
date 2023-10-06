@@ -279,6 +279,20 @@ namespace server.Services.gRPC
 
             Task<FromPathToIdRespond> FindFileOrDirectory(Guid computer, Guid directory, string name)
             {
+                if (name == ".")
+                    return Task<FromPathToIdRespond>.FromResult(new FromPathToIdRespond() { IsDirectory = true, Id = directory.ToByteString() });
+                if (name == "..")
+                {
+                    if (directory == rootDir)
+                        throw new RpcException(new Status(StatusCode.NotFound, "Root directory do not have parent"));
+                    else
+                    {
+                        var baseDir = fileSystemManager.GetDirectoryById(computer, directory)!;
+                        var targetDir = fileSystemManager.GetDirectoryById(computer, baseDir.Parent)
+                            ?? throw new RpcException(new Status(StatusCode.DataLoss, "Non-root directory's parent not found"));
+                        return Task.FromResult(new FromPathToIdRespond() { IsDirectory = true, Id = targetDir.Id.ToByteString() });
+                    }
+                }
                 var file = fileSystemManager.GetFileByName(computer, directory, name);
                 if (file is not null)
                     return Task<FromPathToIdRespond>.FromResult(new FromPathToIdRespond() { IsDirectory = false, Id = file.Id.ToByteString() });

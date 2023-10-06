@@ -1,4 +1,6 @@
-﻿using client.Utils;
+﻿using client.Gui;
+using client.Utils;
+using Grpc.Core;
 using server.Protos;
 using static server.Protos.Account;
 using static server.Protos.Computer;
@@ -61,8 +63,15 @@ namespace client.Api
                 if (myComputer == null)
                 {
                     var request = new GetMyComputerRequest();
-                    var response = ComputerClient.GetMyComputer(request);
-                    myComputer = response.Info.ToComputer(FileSystemClient);
+                    try
+                    {
+                        var response = VisualGrpc.Invoke(ComputerClient.GetMyComputerAsync, request);
+                        myComputer = response.Info.ToComputer(FileSystemClient);
+                    }
+                    catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
+                    {
+                        throw new NotFoundException();
+                    }
                 }
                 return myComputer;
             }

@@ -17,7 +17,7 @@ namespace client.Api
 
         private Task basicInfoTask;
         private Guid parentId;
-        private string name;
+        private string? name; // null only if this is root directory
 
         private Task childDirsTask;
         private List<DirectoryInfo> childDirs;
@@ -39,7 +39,7 @@ namespace client.Api
             childFiles = new List<FileInfo>();
         }
 
-        public Directory(FileSystemClient client, Guid computerId, Guid directoryId, Guid parent, string name)
+        public Directory(FileSystemClient client, Guid computerId, Guid directoryId, Guid parent, string? name)
         {
             this.client = client;
             this.computerId = computerId;
@@ -114,7 +114,7 @@ namespace client.Api
         {
             get
             {
-                basicInfoTask.Wait();
+                basicInfoTask.WaitWithoutAggragateException();
                 return parentId;
             }
         }
@@ -131,11 +131,11 @@ namespace client.Api
             }
         }
 
-        public string Name
+        public string? Name
         {
             get
             {
-                basicInfoTask.Wait();
+                basicInfoTask.WaitWithoutAggragateException();
                 return name;
             }
         }
@@ -169,7 +169,7 @@ namespace client.Api
 
         public IDirectory CreateDirectory(string name)
         {
-            return CreateDirectoryAsync(name).Result;
+            return CreateDirectoryAsync(name).GetResultWithoutAggragateException();
         }
 
         public async Task<IFile> CreateDataFileAsync(string name, byte[] data)
@@ -202,7 +202,7 @@ namespace client.Api
 
         public IFile CreateDataFile(string name, byte[] data)
         {
-            return CreateDataFileAsync(name, data).Result;
+            return CreateDataFileAsync(name, data).GetResultWithoutAggragateException();
         }
 
         public async Task DeleteAsync(bool recursive = false)
@@ -229,7 +229,7 @@ namespace client.Api
 
         public void Delete(bool recursive = false)
         {
-            DeleteAsync(recursive).Wait();
+            DeleteAsync(recursive).WaitWithoutAggragateException();
         }
 
         public async Task RenameAsync(string name)
@@ -260,14 +260,14 @@ namespace client.Api
 
         public void Rename(string name)
         {
-            RenameAsync(name).Wait();
+            RenameAsync(name).WaitWithoutAggragateException();
         }
 
         public List<IFile> ChildFiles
         {
             get
             {
-                childFilesTask.Wait();
+                childFilesTask.WaitWithoutAggragateException();
                 return childFiles.Select(info => (IFile)info.ToFile(client, computerId)).ToList();
             }
         }
@@ -276,12 +276,12 @@ namespace client.Api
         {
             get
             {
-                childDirsTask.Wait();
+                childDirsTask.WaitWithoutAggragateException();
                 return childDirs.Select(info => (IDirectory)info.ToDirectory(client, computerId)).ToList();
             }
         }
 
-        public async Task<Guid> FromPathToId(string path)
+        public async Task<IDirectory> SeekDirectoryAsync(string path)
         {
             var request = new FromPathToIdRequest
             {
@@ -292,7 +292,9 @@ namespace client.Api
             try
             {
                 var respond = await VisualGrpc.InvokeAsync(client.FromPathToIdAsync, request);
-                return respond.Id.ToGuid();
+                if (respond.IsDirectory == false)
+                    throw new NotFoundException();
+                return new Directory(client, computerId, respond.Id.ToGuid());
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -302,6 +304,41 @@ namespace client.Api
             {
                 throw new DamagedFileSystemStructureException(e.Message);
             }
+        }
+
+        public IDirectory SeekDirectory(string path)
+        {
+            return SeekDirectoryAsync(path).GetResultWithoutAggragateException();
+        }
+
+        public async Task<File> SeekFileAsync(string path)
+        {
+            var request = new FromPathToIdRequest
+            {
+                Computer = computerId.ToByteString(),
+                StartDirectory = directoryId.ToByteString(),
+                Path = path,
+            };
+            try
+            {
+                var respond = await VisualGrpc.InvokeAsync(client.FromPathToIdAsync, request);
+                if (respond.IsDirectory == true)
+                    throw new NotFoundException();
+                return new File(client, computerId, respond.Id.ToGuid());
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
+            {
+                throw new NotFoundException();
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.DataLoss)
+            {
+                throw new DamagedFileSystemStructureException(e.Message);
+            }
+        }
+
+        public File SeekFile(string path)
+        {
+            return SeekFileAsync(path).GetResultWithoutAggragateException();
         }
     }
 }
