@@ -20,8 +20,8 @@
         Task RenameAsync(string name);
         IDirectory SeekDirectory(string path);
         Task<IDirectory> SeekDirectoryAsync(string path);
-        File SeekFile(string path);
-        Task<File> SeekFileAsync(string path);
+        IFile SeekFile(string path);
+        Task<IFile> SeekFileAsync(string path);
         Task SyncBasicInfo();
         Task SyncChildDirectories();
         Task SyncChildFiles();

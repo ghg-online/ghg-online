@@ -10,7 +10,7 @@
  *  Change Log:
  *      2023/09/24   fix a double close bug when user click the cancel button
  *      2023/10/05   add support for synchronous invoke and its error handling
- *      2023/10/06   changed default time to show waiting dialog to 300ms
+ *      2023/10/06   changed default time to show waiting dialog to 1000ms
  *  
  */
 
@@ -59,8 +59,8 @@ namespace client.Gui
         /// </example>
         /// <remarks>
         /// <para>
-        /// This method is equivalent to <code>InvokeAsync(func, request, 300, -1);</code>,
-        /// which means the waiting dialog will be shown after 300 milliseconds, and the invoke will not timeout.
+        /// This method is equivalent to <code>InvokeAsync(func, request, 1000, -1);</code>,
+        /// which means the waiting dialog will be shown after 1000 milliseconds, and the invoke will not timeout.
         /// </para>
         /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
         /// </remarks>
@@ -68,7 +68,7 @@ namespace client.Gui
             where TRequest : IBufferMessage
             where TRespond : IBufferMessage, new()
         {
-            return await InvokeAsync(func, request, 300, -1);
+            return await InvokeAsync(func, request, 1000, -1);
         }
 
 
@@ -82,8 +82,8 @@ namespace client.Gui
         /// <returns>A task that will contain your respond</returns>
         /// <remarks>
         /// <para>
-        /// This method is equivalent to <code>Invoke(func, request, 300, -1);</code>,
-        /// which means the waiting dialog will be shown after 300 milliseconds, and the invoke will not timeout.
+        /// This method is equivalent to <code>Invoke(func, request, 1000, -1);</code>,
+        /// which means the waiting dialog will be shown after 1000 milliseconds, and the invoke will not timeout.
         /// </para>
         /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
         /// </remarks>

@@ -27,6 +27,7 @@ namespace client.Api
             this.ownerAccountId = ownerAccountId;
             this.rootDirectoryId = rootDirectoryId;
             this.fileSystemClient = fileSystemClient;
+            ResourcePool.Instance.Register(computerId, this);
         }
 
         public string Name => name;

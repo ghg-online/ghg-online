@@ -20,10 +20,12 @@ namespace client.Api
         private string? name; // null only if this is root directory
 
         private Task childDirsTask;
-        private List<DirectoryInfo> childDirs;
+        private List<DirectoryInfo> childDirInfos;
+        private List<IDirectory> childDirs;
 
         private Task childFilesTask;
-        private List<FileInfo> childFiles;
+        private List<FileInfo> childFileInfos;
+        private List<IFile> childFiles;
 
         public Directory(FileSystemClient client, Guid computerId, Guid directoryId)
         {
@@ -34,9 +36,12 @@ namespace client.Api
             parentId = Guid.Empty;
             name = string.Empty;
             childDirsTask = SyncChildDirectories();
-            childDirs = new List<DirectoryInfo>();
+            childDirInfos = null!;
+            childDirs = null!;
             childFilesTask = SyncChildFiles();
-            childFiles = new List<FileInfo>();
+            childFileInfos = null!;
+            childFiles = null!;
+            ResourcePool.Instance.Register(directoryId, this);
         }
 
         public Directory(FileSystemClient client, Guid computerId, Guid directoryId, Guid parent, string? name)
@@ -48,9 +53,12 @@ namespace client.Api
             this.parentId = parent;
             this.name = name;
             childDirsTask = SyncChildDirectories();
-            childDirs = new List<DirectoryInfo>();
+            childDirInfos = null!;
+            childDirs = null!;
             childFilesTask = SyncChildFiles();
-            childFiles = new List<FileInfo>();
+            childFileInfos = null!;
+            childFiles = null!;
+            ResourcePool.Instance.Register(directoryId, this);
         }
 
         public async Task SyncBasicInfo()
@@ -82,7 +90,7 @@ namespace client.Api
             try
             {
                 var respond = await VisualGrpc.InvokeAsync(client.ListFilesAsync, request);
-                childFiles = respond.Infos.ToList();
+                childFileInfos = respond.Infos.ToList();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -100,7 +108,7 @@ namespace client.Api
             try
             {
                 var respond = await VisualGrpc.InvokeAsync(client.ListDirectoriesAsync, request);
-                childDirs = respond.Infos.ToList();
+                childDirInfos = respond.Infos.ToList();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -268,7 +276,8 @@ namespace client.Api
             get
             {
                 childFilesTask.WaitWithoutAggragateException();
-                return childFiles.Select(info => (IFile)info.ToFile(client, computerId)).ToList();
+                childFiles ??= childFileInfos!.Select(info => (IFile)info.ToFile(client, computerId)).ToList();
+                return childFiles;
             }
         }
 
@@ -277,7 +286,8 @@ namespace client.Api
             get
             {
                 childDirsTask.WaitWithoutAggragateException();
-                return childDirs.Select(info => (IDirectory)info.ToDirectory(client, computerId)).ToList();
+                childDirs ??= childDirInfos!.Select(info => (IDirectory)info.ToDirectory(client, computerId)).ToList();
+                return childDirs;
             }
         }
 
@@ -294,7 +304,8 @@ namespace client.Api
                 var respond = await VisualGrpc.InvokeAsync(client.FromPathToIdAsync, request);
                 if (respond.IsDirectory == false)
                     throw new NotFoundException();
-                return new Directory(client, computerId, respond.Id.ToGuid());
+                return ResourcePool.Instance.Get<IDirectory>(respond.Id.ToGuid())
+                    ?? new Directory(client, computerId, respond.Id.ToGuid());
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -311,7 +322,7 @@ namespace client.Api
             return SeekDirectoryAsync(path).GetResultWithoutAggragateException();
         }
 
-        public async Task<File> SeekFileAsync(string path)
+        public async Task<IFile> SeekFileAsync(string path)
         {
             var request = new FromPathToIdRequest
             {
@@ -324,7 +335,8 @@ namespace client.Api
                 var respond = await VisualGrpc.InvokeAsync(client.FromPathToIdAsync, request);
                 if (respond.IsDirectory == true)
                     throw new NotFoundException();
-                return new File(client, computerId, respond.Id.ToGuid());
+                return ResourcePool.Instance.Get<IFile>(respond.Id.ToGuid())
+                    ?? new File(client, computerId, respond.Id.ToGuid());
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -336,7 +348,7 @@ namespace client.Api
             }
         }
 
-        public File SeekFile(string path)
+        public IFile SeekFile(string path)
         {
             return SeekFileAsync(path).GetResultWithoutAggragateException();
         }

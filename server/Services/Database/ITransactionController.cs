@@ -2,8 +2,11 @@
 {
     public interface ITransactionController
     {
-        bool BeginTrans();
-        bool Commit();
-        bool Rollback();
+        public interface ITransaction : IDisposable
+        {
+            void Commit();
+            void Rollback();
+        }
+        ITransaction BeginTrans();
     }
 }

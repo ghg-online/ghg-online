@@ -1,5 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace client.Utils
 {

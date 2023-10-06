@@ -36,6 +36,7 @@ namespace client.Api
             parentId = Guid.Empty;
             name = string.Empty;
             type = 0;
+            ResourcePool.Instance.Register(fileId, this);
         }
 
         public File(FileSystemClient client, Guid computerId, Guid fileId, Guid parent, string name, TypeCode type)
@@ -47,6 +48,7 @@ namespace client.Api
             this.parentId = parent;
             this.name = name;
             this.type = type;
+            ResourcePool.Instance.Register(fileId, this);
         }
 
         public async Task Syncronize()

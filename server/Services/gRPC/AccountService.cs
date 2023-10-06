@@ -106,7 +106,7 @@ public sealed class AccountService : Protos.Account.AccountBase
             return Task.FromResult(new RegisterResponse { Success = false, Message = "Username already exists!" });
         }
 
-        _transCtrl.BeginTrans();
+        using var transaction = _transCtrl.BeginTrans();
         _activationCodeManager.UseCode(request.ActivationCode);
         _accountManager.CreateAccount(request.Username, request.Password, Entities.Account.RoleCode.User);
         Guid account = _accountManager.QueryAccount(request.Username).Id;
@@ -118,7 +118,7 @@ public sealed class AccountService : Protos.Account.AccountBase
         _fileSystemManager.CreateDirectory(computer, rootDir, "lib");
         _fileSystemManager.CreateDirectory(computer, rootDir, "usr");
         _fileSystemManager.CreateDirectory(computer, rootDir, "var");
-        _transCtrl.Commit();
+        transaction.Commit();
         _accountLogger.WriteLog(accountLogType, context.Peer, request.Username, true, "Register success");
 
         return Task.FromResult(new RegisterResponse { Success = true, Message = "Register success!" });

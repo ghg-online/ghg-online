@@ -40,22 +40,16 @@ namespace server.Services.gRPC
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid file name"));
             }
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid parent = request.Parent.ToGuid();
             if (fileSystemManager.ExistsDirectory(computer, parent) == false)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "Parent directory not found"));
-            }
             if (fileSystemManager.ExistsFile(computer, parent, request.FileName))
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.AlreadyExists, "File already exists"));
-            }
             var id = fileSystemManager.CreateFile(computer, parent, request.FileName, FileType.Readable | FileType.Writable);
             fileDataManager.Create(computer, id, request.Data.ToByteArray());
-            transCtrl.Commit();
+            transaction.Commit();
             return Task<CreateDataFileRespond>.FromResult(new CreateDataFileRespond { File = id.ToByteString() });
         }
 
@@ -68,21 +62,15 @@ namespace server.Services.gRPC
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid directory name"));
             }
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid parent = request.Parent.ToGuid();
             if (fileSystemManager.ExistsDirectory(computer, parent) == false)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "Parent directory not found"));
-            }
             if (fileSystemManager.ExistsDirectory(computer, parent, request.DirectoryName))
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.AlreadyExists, "Directory already exists"));
-            }
             var id = fileSystemManager.CreateDirectory(computer, parent, request.DirectoryName);
-            transCtrl.Commit();
+            transaction.Commit();
             return Task<CreateDirectoryRespond>.FromResult(new CreateDirectoryRespond { Directory = id.ToByteString() });
         }
 
@@ -90,14 +78,11 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid id = request.Directory.ToGuid();
             if (fileSystemManager.ExistsDirectory(computer, id) == false)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "Directory not found"));
-            }
             if (request.Recursive)
             {
                 IEnumerable<Guid> childDirectories = new List<Guid>() { id };
@@ -120,18 +105,15 @@ namespace server.Services.gRPC
                     childFiles = newChildFiles;
                 }
                 fileSystemManager.DeleteDirectory(computer, id);
-                transCtrl.Commit();
+                transaction.Commit();
                 return Task<DeleteDirectoryRespond>.FromResult(new DeleteDirectoryRespond());
             }
             else
             {
                 if (fileSystemManager.IsDirectoryEmpty(computer, id) == false)
-                {
-                    transCtrl.Rollback();
                     throw new RpcException(new Status(StatusCode.FailedPrecondition, "Directory is not empty"));
-                }
                 fileSystemManager.DeleteDirectory(computer, id);
-                transCtrl.Commit();
+                transaction.Commit();
                 return Task<DeleteDirectoryRespond>.FromResult(new DeleteDirectoryRespond());
             }
         }
@@ -140,19 +122,16 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid id = request.File.ToGuid();
             var file = fileSystemManager.GetFileById(computer, id);
             if (file == null)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "File not found"));
-            }
             fileSystemManager.DeleteFile(computer, id);
             if (file.Type.HasFlag(FileType.Readable) && file.Type.HasFlag(FileType.Writable))
                 fileDataManager.Delete(computer, id);
-            transCtrl.Commit();
+            transaction.Commit();
             return Task<DeleteFileRespond>.FromResult(new DeleteFileRespond());
         }
 
@@ -160,7 +139,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans(); // This operation is read-only, so no need to commit or rollback
+            using var transaction = transCtrl.BeginTrans(); // This operation is read-only, so no need to commit or rollback
             Guid computer = request.Computer.ToGuid();
             Guid id = request.Id.ToGuid();
             if (fileSystemManager.ExistsDirectory(computer, id))
@@ -204,7 +183,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid rootDir = computerManager.QueryComputerById(computer).RootDirectory;
             Guid startDir = request.StartDirectory.ToGuid();
@@ -307,7 +286,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans(); // This is a read-only operation
+            using var transaction = transCtrl.BeginTrans(); // This is a read-only operation
             Guid computer = request.Computer.ToGuid();
             Guid directory = request.Directory.ToGuid();
             var dir = fileSystemManager.GetDirectoryById(computer, directory)
@@ -319,7 +298,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans(); // This is a read-only operation
+            using var transaction = transCtrl.BeginTrans(); // This is a read-only operation
             Guid computer = request.Computer.ToGuid();
             Guid file = request.File.ToGuid();
             var f = fileSystemManager.GetFileById(computer, file)
@@ -331,7 +310,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid directory = request.Directory.ToGuid();
             if (fileSystemManager.ExistsDirectory(computer, directory) == false)
@@ -347,7 +326,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid directory = request.Directory.ToGuid();
             if (fileSystemManager.ExistsDirectory(computer, directory) == false)
@@ -363,23 +342,17 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid file = request.File.ToGuid();
             var f = fileSystemManager.GetFileById(computer, file);
             if (f == null)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "File not exists"));
-            }
             if (false == f.Type.HasFlag(File.TypeCode.Writable)
                 || false == f.Type.HasFlag(File.TypeCode.Readable))
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "File is not a data file"));
-            }
             fileDataManager.Modify(computer, file, request.Data.ToArray());
-            transCtrl.Commit();
+            transaction.Commit();
             return Task<ModifyDataFileRespond>.FromResult(new ModifyDataFileRespond());
         }
 
@@ -387,7 +360,7 @@ namespace server.Services.gRPC
         {
             authHelper.EnsurePermissionForComputer(context, request.Computer.ToGuid());
 
-            transCtrl.BeginTrans(); // This is a read-only operation
+            using var transaction = transCtrl.BeginTrans(); // This is a read-only operation
             Guid computer = request.Computer.ToGuid();
             Guid file = request.File.ToGuid();
             var f = fileSystemManager.GetFileById(computer, file)
@@ -404,22 +377,16 @@ namespace server.Services.gRPC
             if (Directory.IsNameValid(request.Name) == false)
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid directory name"));
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid directory = request.Directory.ToGuid();
             var dir = fileSystemManager.GetDirectoryById(computer, directory);
             if (dir == null)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "Directory not exists"));
-            }
             if (fileSystemManager.GetDirectoryByName(computer, dir.Parent, request.Name) != null)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.AlreadyExists, "Directory already exists"));
-            }
             fileSystemManager.RenameDirectory(computer, directory, request.Name);
-            transCtrl.Commit();
+            transaction.Commit();
             return Task<RenameDirectoryRespond>.FromResult(new RenameDirectoryRespond());
         }
 
@@ -430,22 +397,16 @@ namespace server.Services.gRPC
             if (File.IsNameValid(request.Name) == false)
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid file name"));
 
-            transCtrl.BeginTrans();
+            using var transaction = transCtrl.BeginTrans();
             Guid computer = request.Computer.ToGuid();
             Guid file = request.File.ToGuid();
             var f = fileSystemManager.GetFileById(computer, file);
             if (f == null)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.NotFound, "File not exists"));
-            }
             if (fileSystemManager.GetFileByName(computer, f.Parent, request.Name) != null)
-            {
-                transCtrl.Rollback();
                 throw new RpcException(new Status(StatusCode.AlreadyExists, "File already exists"));
-            }
             fileSystemManager.RenameFile(computer, file, request.Name);
-            transCtrl.Commit();
+            transaction.Commit();
             return Task<RenameFileRespond>.FromResult(new RenameFileRespond());
         }
     }

@@ -45,7 +45,7 @@
             int read;
             while ((read = this.buffer.Read(buffer, offset, count)) == 0)
             {
-                Thread.Sleep(1);
+                _event.WaitOne();
             }
             return read;
         }
