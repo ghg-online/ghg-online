@@ -32,7 +32,7 @@ namespace client.Api
             this.client = client;
             this.computerId = computerId;
             this.fileId = fileId;
-            basicInfoTask = Syncronize();
+            basicInfoTask = Synchronize();
             parentId = Guid.Empty;
             name = string.Empty;
             type = 0;
@@ -51,7 +51,12 @@ namespace client.Api
             ResourcePool.Instance.Register(fileId, this);
         }
 
-        public async Task Syncronize()
+        public async Task SyncAll()
+        {
+            await Synchronize();
+        }
+
+        public async Task Synchronize()
         {
             var request = new GetFileInfoRequest
             {

@@ -5,15 +5,17 @@
  *  
  *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/10/05
+ *  Last Modify :   2023/10/07
  *  
  *  Change Log:
  *      2023/09/24   fix a double close bug when user click the cancel button
  *      2023/10/05   add support for synchronous invoke and its error handling
  *      2023/10/06   changed default time to show waiting dialog to 1000ms
+ *      2023/10/07   add support for status-bar based visualization
  *  
  */
 
+using client.Gui.StatusBar;
 using Google.Protobuf;
 using Grpc.Core;
 using System.Diagnostics;
@@ -23,7 +25,7 @@ using Terminal.Gui;
 namespace client.Gui
 {
     /// <summary>
-    /// This static class is used to invoke gRPC methods and show a waiting dialog.
+    /// This static class is used to invoke gRPC methods with some sort of visualization.
     /// </summary>
     public static class VisualGrpc
     {
@@ -43,6 +45,14 @@ namespace client.Gui
             public UserCancelledException() : base("Operation cancelled by user") { }
         }
 
+        public static bool ShowDialog
+        {
+            get
+            {
+                return false == (Application.Top.StatusBar?.Visible ?? false);
+            }
+        }
+
         /// <summary>
         /// Invoke a gRPC method and show a waiting dialog.
         /// </summary>
@@ -55,7 +65,7 @@ namespace client.Gui
         /// <code>var loginRespond = await VisualGrpc.InvokeAsync(LoginAsync, loginRequest);</code>
         /// is equivalent to
         /// <code>var loginRespond = await LoginAsync(loginRequest);</code>
-        /// except that a waiting dialog will be shown during the invoke, and user can cancel the invoke.
+        /// except that we provide with some sort of visualization.
         /// </example>
         /// <remarks>
         /// <para>
@@ -234,6 +244,7 @@ namespace client.Gui
             public async Task Invoke(Func<CancellationToken, Task> func)
             {
                 BeginTiming();
+                VisualGrpcStatusItem.Instance.Increase();
                 try
                 {
                     await func(cancellationTokenSource.Token);
@@ -255,6 +266,8 @@ namespace client.Gui
                 }
                 finally
                 {
+                    VisualGrpcStatusItem.Instance.Decrease();
+
                     Application.MainLoop.RemoveTimeout(noticeTimer);
                     Application.MainLoop.RemoveTimeout(timeOutTimer);
                     //Application.MainLoop.Invoke(() => {
@@ -303,11 +316,14 @@ namespace client.Gui
 
             void OnShowNoticeTimerElapsed(object? sender, EventArgs e)
             {
-                dialog = new("Wait", "Waiting for server respond...", UserCancelRequest);
-                //Application.MainLoop.Invoke(() =>
-                //{
-                Application.Run(dialog);
-                //});
+                if (ShowDialog)
+                {
+                    dialog = new("Wait", "Waiting for server respond...", UserCancelRequest);
+                    //Application.MainLoop.Invoke(() =>
+                    //{
+                    Application.Run(dialog);
+                    //});
+                }
             }
 
             void OnTimeOutTimerElapsed(object? sender, EventArgs e)

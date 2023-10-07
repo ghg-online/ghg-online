@@ -1,6 +1,6 @@
 ﻿namespace client.Api
 {
-    public interface IComputer
+    public interface IComputer : ISyncable
     {
         string Name { get; }
         Guid OwnerAccountId { get; }

@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 
 namespace client.Utils
 {
-    public static class AvoidAggragateExceptionExtensions
+    public static class AvoidAggregateExceptionExtensions
     {
-        public static TResult GetResultWithoutAggragateException<TResult>(this Task<TResult> task)
+        public static TResult GetResultWithoutAggregateException<TResult>(this Task<TResult> task)
         {
             try
             {
@@ -13,11 +14,12 @@ namespace client.Utils
             catch (AggregateException e)
             {
                 Debug.Assert(e.InnerExceptions.Count == 1);
-                throw e.InnerExceptions[0];
+                ExceptionDispatchInfo.Throw(e.InnerExceptions[0]);
+                throw; // Unreachable
             }
         }
 
-        public static void WaitWithoutAggragateException(this Task task)
+        public static void WaitWithoutAggregateException(this Task task)
         {
             try
             {
@@ -26,7 +28,8 @@ namespace client.Utils
             catch (AggregateException e)
             {
                 Debug.Assert(e.InnerExceptions.Count == 1);
-                throw e.InnerExceptions[0];
+                ExceptionDispatchInfo.Throw(e.InnerExceptions[0]);
+                throw; // Unreachable
             }
         }
     }

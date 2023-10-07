@@ -6,6 +6,7 @@ package computer;
 
 service Computer{
 	rpc GetMyComputer (GetMyComputerRequest) returns (GetMyComputerRespond);
+	rpc GetComputerInfo (GetComputerInfoRequest) returns (GetComputerInfoRespond);
 }
 
 message ComputerInfo {
@@ -18,5 +19,13 @@ message ComputerInfo {
 message GetMyComputerRequest {}
 
 message GetMyComputerRespond {
+	ComputerInfo info = 1;
+}
+
+message GetComputerInfoRequest {
+	bytes computer_id = 1;
+}
+
+message GetComputerInfoRespond {
 	ComputerInfo info = 1;
 }

@@ -5,7 +5,7 @@
  *  
  *  Creator     :   Nictheboy
  *  Create at   :   2023/08/22
- *  Last Modify :   2023/08/22
+ *  Last Modify :   2023/10/07
  *  
  */
 
@@ -27,11 +27,14 @@ namespace client.Gui
         {
             Application.MainLoop.Invoke(() =>
             {
+                /*
                 int result = MessageBox.ErrorQuery("Exception", e.Message, new ustring[] { "Stack trace", "Abort" });
                 if (result == 0)
                 {
                     MessageBox.ErrorQuery("Stack trace", e.StackTrace, "OK");
                 }
+                */
+                MessageBox.ErrorQuery("Exception", e.ToString(), new ustring[] { "Abort" });
             });
         }
     }

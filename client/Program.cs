@@ -4,6 +4,7 @@ using client;
 using Console = client.Gui.Console.Console;
 using client.App;
 using client.Api;
+using client.Gui.StatusBar;
 
 Exception? exception = null;
 while (true)
@@ -22,6 +23,7 @@ while (true)
             ConnectionInfo.LoadGrpcChannel(channel);
             ConnectionInfo.LoadUsername(loginWindow.Username!);
             Application.Top.Add(new MenuBar(new[] { new AccountMenu() }));
+            Application.Top.Add(new StatusBar(new[] { VisualGrpcStatusItem.Instance }));
 
             // Calculate height and width for console
             // Console needs a fixed display size, which is requirement of Terminal.ScreenLibrary library

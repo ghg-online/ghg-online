@@ -6,6 +6,7 @@ using Directory = client.Api.Directory;
 using DirectoryInfo = server.Protos.DirectoryInfo;
 using server.Protos;
 using Computer = client.Api.Computer;
+using static server.Protos.Computer;
 
 namespace client.Utils
 {
@@ -34,14 +35,18 @@ namespace client.Utils
             );
         }
 
-        public static Computer ToComputer(this ComputerInfo computerInfo, FileSystemClient client)
+        public static Computer ToComputer(
+            this ComputerInfo computerInfo,
+            ComputerClient computerClient,
+            FileSystemClient fileSystemClient)
         {
             return new Computer(
+                computerClient,
                 computerInfo.Id.ToGuid(),
                 computerInfo.Name,
                 computerInfo.Owner.ToGuid(),
                 computerInfo.RootDirectory.ToGuid(),
-                client
+                fileSystemClient
             );
         }
     }

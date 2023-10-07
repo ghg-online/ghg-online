@@ -79,12 +79,5 @@ namespace client.Gui.Console
             Application.Driver.SetCursorVisibility(CursorVisibility.Default);
             //Application.Driver.SetCursorVisibility(cursorVisible ? CursorVisibility.Default : CursorVisibility.Invisible);
         }
-
-        public override void Redraw(Rect bounds)
-        {
-            base.Redraw(bounds);
-            //PositionCursor();
-            //Application.Driver.UpdateCursor();
-        }
     }
 }

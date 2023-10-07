@@ -1,6 +1,6 @@
 ﻿namespace client.Api
 {
-    public interface IDirectory
+    public interface IDirectory : ISyncable
     {
         List<IDirectory> ChildDirectories { get; }
         List<IFile> ChildFiles { get; }
@@ -9,6 +9,7 @@
         string? Name { get; } // null if root
         Guid ParentId { get; }
         IDirectory? Parent { get; }
+        IComputer? Computer { get; }
 
         IFile CreateDataFile(string name, byte[] data);
         Task<IFile> CreateDataFileAsync(string name, byte[] data);

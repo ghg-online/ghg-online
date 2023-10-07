@@ -66,7 +66,7 @@ namespace client.Api
                     try
                     {
                         var response = VisualGrpc.Invoke(ComputerClient.GetMyComputerAsync, request);
-                        myComputer = response.Info.ToComputer(FileSystemClient);
+                        myComputer = response.Info.ToComputer(ComputerClient, FileSystemClient);
                     }
                     catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
                     {

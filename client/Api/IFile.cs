@@ -1,6 +1,6 @@
 ﻿namespace client.Api
 {
-    public interface IFile
+    public interface IFile : ISyncable
     {
         Guid ComputerId { get; }
         Guid FileId { get; }
@@ -17,6 +17,6 @@
         Task<byte[]> ReadAsync();
         void Rename(string name);
         Task RenameAsync(string name);
-        Task Syncronize();
+        Task Synchronize();
     }
 }

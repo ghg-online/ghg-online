@@ -1,6 +1,4 @@
-﻿using Google.Protobuf.Collections;
-
-namespace client.Api
+﻿namespace client.Api
 {
     public class ResourcePool
     {
@@ -30,7 +28,8 @@ namespace client.Api
         /// </param>
         public void Register<T>(Guid guid, T obj) where T : class
         {
-            pool.Add(guid, obj);
+            if (false == pool.ContainsKey(guid))
+                pool.Add(guid, obj);
         }
 
         /// <summary>
@@ -47,7 +46,10 @@ namespace client.Api
         /// </returns>
         public T? Get<T>(Guid guid) where T : class
         {
-            return pool[guid] as T;
+            if (pool.ContainsKey(guid))
+                return pool[guid] as T;
+            else
+                return null;
         }
     }
 }

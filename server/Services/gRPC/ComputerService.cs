@@ -18,6 +18,15 @@ namespace server.Services.gRPC
             this.computerManager = computerManager;
         }
 
+        public override Task<GetComputerInfoRespond> GetComputerInfo(GetComputerInfoRequest request, ServerCallContext context)
+        {
+            authHelper.EnsurePermissionForComputer(context, request.ComputerId.ToGuid());
+
+            var info = computerManager.QueryComputerById(request.ComputerId.ToGuid())?.ToComputerInfo()
+                ?? throw new RpcException(new Status(StatusCode.NotFound, "Computer not found!"));
+            return Task<GetComputerInfoRespond>.FromResult(new GetComputerInfoRespond() { Info = info });
+        }
+
         public override Task<GetMyComputerRespond> GetMyComputer(GetMyComputerRequest request, ServerCallContext context)
         {
             var tokenInfo = authHelper.GetValidatedToken(context);
@@ -29,13 +38,7 @@ namespace server.Services.gRPC
             else
             {
                 var computer = ownedComputers.FirstOrDefault()!;
-                var info = new ComputerInfo()
-                {
-                    Id = computer.Id.ToByteString(),
-                    Name = computer.Name,
-                    Owner = computer.Owner.ToByteString(),
-                    RootDirectory = computer.RootDirectory.ToByteString(),
-                };
+                var info = computer.ToComputerInfo();
                 return Task<GetMyComputerRespond>.FromResult(new GetMyComputerRespond() { Info = info });
             }
         }

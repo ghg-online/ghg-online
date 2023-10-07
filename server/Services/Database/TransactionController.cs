@@ -1,5 +1,4 @@
-﻿using LiteDB;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using static server.Services.Database.ITransactionController;
 

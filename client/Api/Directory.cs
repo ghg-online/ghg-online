@@ -3,6 +3,7 @@ using client.Utils;
 using Grpc.Core;
 using server.Protos;
 using server.Services.gRPC.Extensions;
+using static server.Protos.Computer;
 using static server.Protos.FileSystem;
 using DirectoryInfo = server.Protos.DirectoryInfo;
 using FileInfo = server.Protos.FileInfo;
@@ -21,11 +22,13 @@ namespace client.Api
 
         private Task childDirsTask;
         private List<DirectoryInfo> childDirInfos;
-        private List<IDirectory> childDirs;
+        private List<IDirectory> childDirs; // this is null event after childDirsTask is completed
+                                            // it's not null until ChildDirectories is called
 
         private Task childFilesTask;
         private List<FileInfo> childFileInfos;
-        private List<IFile> childFiles;
+        private List<IFile> childFiles; // this is null event after childFilesTask is completed
+                                        // it's not null until ChildFiles is called
 
         public Directory(FileSystemClient client, Guid computerId, Guid directoryId)
         {
@@ -59,6 +62,15 @@ namespace client.Api
             childFileInfos = null!;
             childFiles = null!;
             ResourcePool.Instance.Register(directoryId, this);
+            childDirsTask.ContinueWith((task) => { _ = ChildDirectories; });
+        }
+
+        public async Task SyncAll()
+        {
+            Task syncBasicInfoTask = SyncBasicInfo();
+            Task syncChildDirsTask = SyncChildDirectories();
+            Task syncChildFilesTask = SyncChildFiles();
+            await Task.WhenAll(syncBasicInfoTask, syncChildDirsTask, syncChildFilesTask);
         }
 
         public async Task SyncBasicInfo()
@@ -122,20 +134,44 @@ namespace client.Api
         {
             get
             {
-                basicInfoTask.WaitWithoutAggragateException();
+                basicInfoTask.WaitWithoutAggregateException();
                 return parentId;
             }
         }
 
-        private IDirectory? parent;
+        private IDirectory? parent = null;
         public IDirectory? Parent
         {
             get
             {
                 if (parentId == Guid.Empty)
                     return null;
-                parent ??= new Directory(client, computerId, parentId);
+                if (parent == null)
+                {
+                    if ((parent = ResourcePool.Instance.Get<IDirectory>(parentId)) != null)
+                        parent.SyncAll();
+                    else
+                        parent = new Directory(client, computerId, parentId);
+                }
                 return parent;
+            }
+        }
+
+        private IComputer? computer = null;
+        public IComputer? Computer
+        {
+            get
+            {
+                if (computerId == Guid.Empty)
+                    return null;
+                if (computer == null)
+                {
+                    if ((computer = ResourcePool.Instance.Get<IComputer>(computerId)) != null)
+                        computer.SyncAll();
+                    else
+                        computer = new Computer(new ComputerClient(ConnectionInfo.GrpcChannel), ComputerId);
+                }
+                return computer;
             }
         }
 
@@ -143,7 +179,7 @@ namespace client.Api
         {
             get
             {
-                basicInfoTask.WaitWithoutAggragateException();
+                basicInfoTask.WaitWithoutAggregateException();
                 return name;
             }
         }
@@ -177,7 +213,7 @@ namespace client.Api
 
         public IDirectory CreateDirectory(string name)
         {
-            return CreateDirectoryAsync(name).GetResultWithoutAggragateException();
+            return CreateDirectoryAsync(name).GetResultWithoutAggregateException();
         }
 
         public async Task<IFile> CreateDataFileAsync(string name, byte[] data)
@@ -210,7 +246,7 @@ namespace client.Api
 
         public IFile CreateDataFile(string name, byte[] data)
         {
-            return CreateDataFileAsync(name, data).GetResultWithoutAggragateException();
+            return CreateDataFileAsync(name, data).GetResultWithoutAggregateException();
         }
 
         public async Task DeleteAsync(bool recursive = false)
@@ -237,7 +273,7 @@ namespace client.Api
 
         public void Delete(bool recursive = false)
         {
-            DeleteAsync(recursive).WaitWithoutAggragateException();
+            DeleteAsync(recursive).WaitWithoutAggregateException();
         }
 
         public async Task RenameAsync(string name)
@@ -268,14 +304,14 @@ namespace client.Api
 
         public void Rename(string name)
         {
-            RenameAsync(name).WaitWithoutAggragateException();
+            RenameAsync(name).WaitWithoutAggregateException();
         }
 
         public List<IFile> ChildFiles
         {
             get
             {
-                childFilesTask.WaitWithoutAggragateException();
+                childFilesTask.WaitWithoutAggregateException();
                 childFiles ??= childFileInfos!.Select(info => (IFile)info.ToFile(client, computerId)).ToList();
                 return childFiles;
             }
@@ -285,7 +321,7 @@ namespace client.Api
         {
             get
             {
-                childDirsTask.WaitWithoutAggragateException();
+                childDirsTask.WaitWithoutAggregateException();
                 childDirs ??= childDirInfos!.Select(info => (IDirectory)info.ToDirectory(client, computerId)).ToList();
                 return childDirs;
             }
@@ -293,6 +329,50 @@ namespace client.Api
 
         public async Task<IDirectory> SeekDirectoryAsync(string path)
         {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+            if (path.StartsWith("/"))
+                if (Computer != null)
+                {
+                    string after = path[1..];
+                    if (string.IsNullOrEmpty(after))
+                        return Computer.RootDirectory;
+                    else
+                        return await Computer.RootDirectory.SeekDirectoryAsync(path[1..]);
+                }
+            if (false == path.Contains('/'))
+            {
+                if (path == ".")
+                    return this;
+                else if (path == "..")
+                    return Parent ?? throw new NotFoundException();
+                if (childDirsTask.IsCompletedSuccessfully)
+                {
+                    return ChildDirectories.FirstOrDefault(dir => dir?.Name == path, null)
+                        ?? throw new NotFoundException();
+                }
+            }
+            else
+            {
+                if (childDirsTask.IsCompletedSuccessfully)
+                {
+                    string firstDirName = path[..path.IndexOf('/')];
+                    IDirectory dir;
+                    if (firstDirName == ".")
+                        dir = this;
+                    else if (firstDirName == "..")
+                        dir = Parent ?? throw new NotFoundException();
+                    else
+                        dir = ChildDirectories.FirstOrDefault(dir => dir?.Name == firstDirName, null)
+                            ?? throw new NotFoundException();
+                    string after = path[(path.IndexOf('/') + 1)..];
+                    if (string.IsNullOrEmpty(after))
+                        return dir;
+                    else
+                        return await dir.SeekDirectoryAsync(after);
+                }
+            }
+
             var request = new FromPathToIdRequest
             {
                 Computer = computerId.ToByteString(),
@@ -319,7 +399,7 @@ namespace client.Api
 
         public IDirectory SeekDirectory(string path)
         {
-            return SeekDirectoryAsync(path).GetResultWithoutAggragateException();
+            return SeekDirectoryAsync(path).GetResultWithoutAggregateException();
         }
 
         public async Task<IFile> SeekFileAsync(string path)
@@ -350,7 +430,7 @@ namespace client.Api
 
         public IFile SeekFile(string path)
         {
-            return SeekFileAsync(path).GetResultWithoutAggragateException();
+            return SeekFileAsync(path).GetResultWithoutAggregateException();
         }
     }
 }
