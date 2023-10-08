@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\server\Services\gRPC\Extensions\GuidExtensions.cs" Link="Utils\GuidExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.21.5" />
     <PackageReference Include="Grpc.Net.ClientFactory" Version="2.56.0-pre2" />
     <PackageReference Include="Grpc.Tools" Version="2.49.0">

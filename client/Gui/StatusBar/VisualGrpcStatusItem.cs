@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Terminal.Gui;
+﻿using Terminal.Gui;
 
 namespace client.Gui.StatusBar
 {

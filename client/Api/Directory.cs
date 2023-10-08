@@ -1,9 +1,11 @@
-﻿using client.Gui;
+﻿using client.Api.Abstraction;
+using client.Api.Entity;
+using client.Api.GrpcMiddleware;
+using client.Gui;
 using client.Utils;
 using Grpc.Core;
 using server.Protos;
 using server.Services.gRPC.Extensions;
-using static server.Protos.Computer;
 using static server.Protos.FileSystem;
 using DirectoryInfo = server.Protos.DirectoryInfo;
 using FileInfo = server.Protos.FileInfo;
@@ -12,27 +14,34 @@ namespace client.Api
 {
     public class Directory : IDirectory
     {
-        private FileSystemClient client;
-        private Guid computerId;
-        private Guid directoryId;
+        private readonly ResourcePool pool;
+        private readonly FileSystemClient client;
+        private readonly IGrpcMiddleware GrpcMiddleware;
 
-        private Task basicInfoTask;
+        private readonly Guid computerId;
+        private readonly Guid directoryId;
+
+        private readonly Task basicInfoTask;
         private Guid parentId;
         private string? name; // null only if this is root directory
 
-        private Task childDirsTask;
+        private readonly Task childDirsTask;
         private List<DirectoryInfo> childDirInfos;
         private List<IDirectory> childDirs; // this is null event after childDirsTask is completed
                                             // it's not null until ChildDirectories is called
 
-        private Task childFilesTask;
+        private readonly Task childFilesTask;
         private List<FileInfo> childFileInfos;
         private List<IFile> childFiles; // this is null event after childFilesTask is completed
                                         // it's not null until ChildFiles is called
 
-        public Directory(FileSystemClient client, Guid computerId, Guid directoryId)
+        public Directory(ResourcePool pool, FileSystemClient client, Guid computerId, Guid directoryId)
         {
+            pool.ThrowIfAlreadyExists(directoryId);
+
+            this.pool = pool;
             this.client = client;
+            GrpcMiddleware = pool.GhgApi.GrpcMiddleware;
             this.computerId = computerId;
             this.directoryId = directoryId;
             basicInfoTask = SyncBasicInfo();
@@ -44,25 +53,34 @@ namespace client.Api
             childFilesTask = SyncChildFiles();
             childFileInfos = null!;
             childFiles = null!;
-            ResourcePool.Instance.Register(directoryId, this);
         }
 
-        public Directory(FileSystemClient client, Guid computerId, Guid directoryId, Guid parent, string? name)
+        public Directory(ResourcePool pool, FileSystemClient client, DirectoryInfoEntity info, Guid computerId)
         {
+            pool.ThrowIfAlreadyExists(info.DirectoryId);
+
+            this.pool = pool;
             this.client = client;
+            GrpcMiddleware = pool.GhgApi.GrpcMiddleware;
             this.computerId = computerId;
-            this.directoryId = directoryId;
+            directoryId = info.DirectoryId;
             basicInfoTask = Task.CompletedTask;
-            this.parentId = parent;
-            this.name = name;
+            parentId = info.ParentId;
+            name = info.Name;
             childDirsTask = SyncChildDirectories();
             childDirInfos = null!;
             childDirs = null!;
             childFilesTask = SyncChildFiles();
             childFileInfos = null!;
             childFiles = null!;
-            ResourcePool.Instance.Register(directoryId, this);
-            childDirsTask.ContinueWith((task) => { _ = ChildDirectories; });
+        }
+
+        public void UpdateCache(DirectoryInfoEntity info)
+        {
+            if (info.DirectoryId != directoryId)
+                throw new IllegalUpdateException(typeof(Directory), DirectoryId, info.DirectoryId);
+            parentId = info.ParentId;
+            name = info.Name;
         }
 
         public async Task SyncAll()
@@ -82,7 +100,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.GetDirectoryInfoAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.GetDirectoryInfoAsync, request);
                 parentId = respond.Info.Parent.ToGuid();
                 name = respond.Info.Name;
             }
@@ -101,7 +119,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.ListFilesAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.ListFilesAsync, request);
                 childFileInfos = respond.Infos.ToList();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
@@ -119,7 +137,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.ListDirectoriesAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.ListDirectoriesAsync, request);
                 childDirInfos = respond.Infos.ToList();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
@@ -139,39 +157,23 @@ namespace client.Api
             }
         }
 
-        private IDirectory? parent = null;
         public IDirectory? Parent
         {
             get
             {
                 if (parentId == Guid.Empty)
                     return null;
-                if (parent == null)
-                {
-                    if ((parent = ResourcePool.Instance.Get<IDirectory>(parentId)) != null)
-                        parent.SyncAll();
-                    else
-                        parent = new Directory(client, computerId, parentId);
-                }
-                return parent;
+                return pool.GetDirectory(ComputerId, ParentId);
             }
         }
 
-        private IComputer? computer = null;
         public IComputer? Computer
         {
             get
             {
                 if (computerId == Guid.Empty)
                     return null;
-                if (computer == null)
-                {
-                    if ((computer = ResourcePool.Instance.Get<IComputer>(computerId)) != null)
-                        computer.SyncAll();
-                    else
-                        computer = new Computer(new ComputerClient(ConnectionInfo.GrpcChannel), ComputerId);
-                }
-                return computer;
+                return pool.GetComputer(ComputerId);
             }
         }
 
@@ -194,8 +196,11 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.CreateDirectoryAsync, request);
-                return new Directory(client, computerId, respond.Directory.ToGuid());
+                var respond = await GrpcMiddleware.InvokeAsync(client.CreateDirectoryAsync, request);
+                var newDirectory = pool.GetDirectory(ComputerId, respond.Directory.ToGuid());
+                childDirs.Add(newDirectory);
+                _ = SyncAll();
+                return newDirectory;
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.AlreadyExists)
             {
@@ -227,8 +232,11 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.CreateDataFileAsync, request);
-                return new File(client, computerId, respond.File.ToGuid());
+                var respond = await GrpcMiddleware.InvokeAsync(client.CreateDataFileAsync, request);
+                var newFile = pool.GetFile(ComputerId, respond.File.ToGuid());
+                childFiles.Add(newFile);
+                _ = SyncAll();
+                return newFile;
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.AlreadyExists)
             {
@@ -259,7 +267,9 @@ namespace client.Api
             };
             try
             {
-                await VisualGrpc.InvokeAsync(client.DeleteDirectoryAsync, request);
+                await GrpcMiddleware.InvokeAsync(client.DeleteDirectoryAsync, request);
+                Parent?.ChildDirectories.Remove(this);
+                Parent?.SyncAll();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -286,7 +296,9 @@ namespace client.Api
             };
             try
             {
-                await VisualGrpc.InvokeAsync(client.RenameDirectoryAsync, request);
+                await GrpcMiddleware.InvokeAsync(client.RenameDirectoryAsync, request);
+                this.name = name;
+                _ = SyncAll();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.AlreadyExists)
             {
@@ -312,7 +324,9 @@ namespace client.Api
             get
             {
                 childFilesTask.WaitWithoutAggregateException();
-                childFiles ??= childFileInfos!.Select(info => (IFile)info.ToFile(client, computerId)).ToList();
+                childFiles ??= childFileInfos!.Select(
+                    info => pool.GetFileWithUpdate(ComputerId, info.Id.ToGuid(), info.ToEntity())
+                ).ToList();
                 return childFiles;
             }
         }
@@ -322,7 +336,9 @@ namespace client.Api
             get
             {
                 childDirsTask.WaitWithoutAggregateException();
-                childDirs ??= childDirInfos!.Select(info => (IDirectory)info.ToDirectory(client, computerId)).ToList();
+                childDirs ??= childDirInfos!.Select(
+                    info => pool.GetDirectoryWithUpdate(ComputerId, info.Id.ToGuid(), info.ToEntity())
+                ).ToList();
                 return childDirs;
             }
         }
@@ -381,11 +397,10 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.FromPathToIdAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.FromPathToIdAsync, request);
                 if (respond.IsDirectory == false)
                     throw new NotFoundException();
-                return ResourcePool.Instance.Get<IDirectory>(respond.Id.ToGuid())
-                    ?? new Directory(client, computerId, respond.Id.ToGuid());
+                return pool.GetDirectory(ComputerId, respond.Id.ToGuid());
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -412,11 +427,10 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.FromPathToIdAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.FromPathToIdAsync, request);
                 if (respond.IsDirectory == true)
                     throw new NotFoundException();
-                return ResourcePool.Instance.Get<IFile>(respond.Id.ToGuid())
-                    ?? new File(client, computerId, respond.Id.ToGuid());
+                return pool.GetFile(ComputerId, respond.Id.ToGuid());
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {

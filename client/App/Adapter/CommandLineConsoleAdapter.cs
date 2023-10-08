@@ -1,4 +1,4 @@
-﻿using client.Api;
+﻿using client.Api.Abstraction;
 using System.CommandLine.IO;
 using System.Drawing;
 using ICommandLineConsole = System.CommandLine.IConsole;

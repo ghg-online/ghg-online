@@ -1,14 +1,15 @@
 ﻿using client.Api;
+using client.Api.Abstraction;
 using client.App.Abstraction;
 
 namespace client.App
 {
     public class ApplicationWrapper : Application
     {
-        private GhgApi GhgApi;
+        private IGhgApi GhgApi;
         private Application Application;
 
-        public ApplicationWrapper(GhgApi ghgApi, Application application)
+        public ApplicationWrapper(IGhgApi ghgApi, Application application)
         {
             GhgApi = ghgApi;
             Application = application;

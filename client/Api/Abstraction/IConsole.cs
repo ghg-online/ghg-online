@@ -1,6 +1,6 @@
 ﻿using SysColor = System.Drawing.Color;
 
-namespace client.Api
+namespace client.Api.Abstraction
 {
     public interface IConsole
     {

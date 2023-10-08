@@ -50,7 +50,8 @@ while (true)
             Application.Top.Add(console);
             console.Run((pipe) =>
             {
-                new ApplicationWrapper(new GhgApi(pipe), new GhgMain(new GhgApi(pipe))).Run();
+                var RootApi = GhgApi.CreateInstanceWithGlobalConfiguration(pipe);
+                new ApplicationWrapper(RootApi, new GhgMain(RootApi)).Run();
             });
         };
         Application.Run(loginWindow);

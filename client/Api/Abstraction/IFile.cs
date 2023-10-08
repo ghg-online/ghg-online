@@ -1,4 +1,6 @@
-﻿namespace client.Api
+﻿using client.Api.Entity;
+
+namespace client.Api.Abstraction
 {
     public interface IFile : ISyncable
     {
@@ -9,14 +11,13 @@
         File.TypeCode Type { get; }
         IDirectory Parent { get; }
 
-        void Delete();
-        Task DeleteAsync();
         void Modify(byte[] data);
         Task ModifyAsync(byte[] data);
         byte[] Read();
         Task<byte[]> ReadAsync();
         void Rename(string name);
         Task RenameAsync(string name);
-        Task Synchronize();
+        Task SyncBasicInfo();
+        void UpdateCache(FileInfoEntity info);
     }
 }

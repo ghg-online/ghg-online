@@ -1,10 +1,11 @@
 ﻿using client.Api;
+using client.Api.Abstraction;
 using client.App.Abstraction;
 using client.App.Adapter;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
-using IConsole = client.Api.IConsole;
+using IConsole = client.Api.Abstraction.IConsole;
 using SysColor = System.Drawing.Color;
 
 namespace client.App

@@ -1,4 +1,7 @@
-﻿using client.Gui;
+﻿using client.Api.Abstraction;
+using client.Api.Entity;
+using client.Api.GrpcMiddleware;
+using client.Gui;
 using client.Utils;
 using Grpc.Core;
 using server.Protos;
@@ -18,45 +21,64 @@ namespace client.Api
             Invokable = 8,
         }
 
-        FileSystemClient client;
-        private Guid computerId;
-        private Guid fileId;
+        private readonly ResourcePool pool;
+        private readonly FileSystemClient client;
+        private readonly IGrpcMiddleware GrpcMiddleware;
 
-        private Task basicInfoTask;
+        private readonly Guid computerId;
+        private readonly Guid fileId;
+
+        private readonly Task basicInfoTask;
         private Guid parentId;
         private string name;
         private TypeCode type;
 
-        public File(FileSystemClient client, Guid computerId, Guid fileId)
+        public File(ResourcePool pool, FileSystemClient client, Guid computerId, Guid fileId)
         {
+            pool.ThrowIfAlreadyExists(fileId);
+
+            this.pool = pool;
             this.client = client;
+            GrpcMiddleware = pool.GhgApi.GrpcMiddleware;
             this.computerId = computerId;
             this.fileId = fileId;
-            basicInfoTask = Synchronize();
-            parentId = Guid.Empty;
-            name = string.Empty;
-            type = 0;
-            ResourcePool.Instance.Register(fileId, this);
+            this.basicInfoTask = SyncBasicInfo();
+            this.parentId = Guid.Empty;
+            this.name = string.Empty;
+            this.type = 0;
         }
 
-        public File(FileSystemClient client, Guid computerId, Guid fileId, Guid parent, string name, TypeCode type)
+        public File(ResourcePool pool, FileSystemClient client, FileInfoEntity info, Guid computerId)
         {
+            pool.ThrowIfAlreadyExists(info.FileId);
+
+            this.pool = pool;
             this.client = client;
+            GrpcMiddleware = pool.GhgApi.GrpcMiddleware;
             this.computerId = computerId;
-            this.fileId = fileId;
-            basicInfoTask = Task.CompletedTask;
-            this.parentId = parent;
-            this.name = name;
-            this.type = type;
-            ResourcePool.Instance.Register(fileId, this);
+            this.fileId = info.FileId;
+            this.basicInfoTask = Task.CompletedTask;
+            this.parentId = info.ParentId;
+            this.name = info.Name;
+            this.type = info.TypeCode;
+        }
+
+        public void UpdateCache(FileInfoEntity info)
+        {
+            if (info.FileId != fileId)
+                throw new IllegalUpdateException(typeof(File), FileId, info.FileId);
+
+            this.parentId = info.ParentId;
+            this.name = info.Name;
+            this.type = info.TypeCode;
         }
 
         public async Task SyncAll()
         {
-            await Synchronize();
+            await SyncBasicInfo();
         }
 
-        public async Task Synchronize()
+        public async Task SyncBasicInfo()
         {
             var request = new GetFileInfoRequest
             {
@@ -65,7 +87,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.GetFileInfoAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.GetFileInfoAsync, request);
                 parentId = respond.Info.Parent.ToGuid();
                 name = respond.Info.Name;
                 type = (TypeCode)Enum.Parse(typeof(TypeCode), respond.Info.Type);
@@ -87,13 +109,11 @@ namespace client.Api
             }
         }
 
-        private IDirectory? parent = null;
         public IDirectory Parent
         {
             get
             {
-                parent ??= new Directory(client, computerId, ParentId);
-                return parent;
+                return pool.GetDirectory(ComputerId, ParentId);
             }
         }
 
@@ -123,7 +143,8 @@ namespace client.Api
             };
             try
             {
-                await VisualGrpc.InvokeAsync(client.DeleteFileAsync, request);
+                await GrpcMiddleware.InvokeAsync(client.DeleteFileAsync, request);
+
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -146,7 +167,7 @@ namespace client.Api
             };
             try
             {
-                await VisualGrpc.InvokeAsync(client.RenameFileAsync, request);
+                await GrpcMiddleware.InvokeAsync(client.RenameFileAsync, request);
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -177,7 +198,7 @@ namespace client.Api
             };
             try
             {
-                await VisualGrpc.InvokeAsync(client.ModifyDataFileAsync, request);
+                await GrpcMiddleware.InvokeAsync(client.ModifyDataFileAsync, request);
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {
@@ -203,7 +224,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(client.ReadDataFileAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(client.ReadDataFileAsync, request);
                 return respond.Data.ToByteArray();
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)

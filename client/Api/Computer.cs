@@ -1,9 +1,11 @@
-﻿using client.Gui;
+﻿using client.Api.Abstraction;
+using client.Api.Entity;
+using client.Api.GrpcMiddleware;
+using client.Gui;
 using client.Utils;
 using Grpc.Core;
 using server.Protos;
 using server.Services.gRPC.Extensions;
-using System.Security.Cryptography.X509Certificates;
 using static server.Protos.Computer;
 using static server.Protos.FileSystem;
 
@@ -11,43 +13,58 @@ namespace client.Api
 {
     public class Computer : IComputer
     {
+        private readonly ResourcePool pool;
         private readonly ComputerClient computerClient;
+        private readonly FileSystemClient fileSystemClient;
+        private readonly IGrpcMiddleware GrpcMiddleware;
 
-        private Guid computerId;
+        private readonly Guid computerId;
 
-        Task basicInfoTask;
+        private readonly Task basicInfoTask;
         private string? name = null;
         private Guid ownerAccountId;
         private Guid rootDirectoryId;
 
-        private readonly FileSystemClient fileSystemClient;
 
-        public Computer(ComputerClient client, Guid computerId)
+        public Computer(ResourcePool pool, ComputerClient client,
+            FileSystemClient fileSystemClient, Guid computerId)
         {
+            pool.ThrowIfAlreadyExists(computerId);
+
+            this.pool = pool;
             computerClient = client;
+            this.fileSystemClient = fileSystemClient;
+            GrpcMiddleware = pool.GhgApi.GrpcMiddleware;
             this.computerId = computerId;
             basicInfoTask = SyncBasicInfo();
-            fileSystemClient = new FileSystemClient(ConnectionInfo.GrpcChannel);
         }
 
-        public Computer(
-            ComputerClient client,
-            Guid computerId,
-            string name,
-            Guid ownerAccountId,
-            Guid rootDirectoryId,
-            FileSystemClient fileSystemClient)
+        public Computer(ResourcePool pool, ComputerClient client,
+                       FileSystemClient fileSystemClient, ComputerInfoEntity info)
         {
+            pool.ThrowIfAlreadyExists(info.ComputerId);
+
+            this.pool = pool;
             computerClient = client;
-            this.computerId = computerId;
-            basicInfoTask = Task.CompletedTask;
-            this.name = name;
-            this.ownerAccountId = ownerAccountId;
-            this.rootDirectoryId = rootDirectoryId;
             this.fileSystemClient = fileSystemClient;
-            ResourcePool.Instance.Register(computerId, this);
+            GrpcMiddleware = pool.GhgApi.GrpcMiddleware;
+            computerId = info.ComputerId;
+            basicInfoTask = Task.CompletedTask;
+            name = info.Name;
+            ownerAccountId = info.OwnerAccountId;
+            rootDirectoryId = info.RootDirectoryId;
         }
 
+        public void UpdateCache(ComputerInfoEntity info)
+        {
+            if (info.ComputerId != computerId)
+                throw new IllegalUpdateException(typeof(Computer), ComputerId, info.ComputerId);
+            name = info.Name;
+            ownerAccountId = info.OwnerAccountId;
+            rootDirectoryId = info.RootDirectoryId;
+        }
+
+        public Guid ComputerId => computerId;
         public string Name
         {
             get
@@ -73,18 +90,11 @@ namespace client.Api
             }
         }
 
-        private IDirectory? rootDirectory = null;
         public IDirectory RootDirectory
         {
             get
             {
-                if (rootDirectory == null)
-                {
-                    if ((rootDirectory = ResourcePool.Instance.Get<IDirectory>(RootDirectoryId)) != null)
-                        rootDirectory.SyncAll();
-                    rootDirectory = new Directory(fileSystemClient, computerId, RootDirectoryId);
-                }
-                return rootDirectory;
+                return pool.GetDirectory(ComputerId, RootDirectoryId);
             }
         }
 
@@ -101,7 +111,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(computerClient.GetComputerInfoAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(computerClient.GetComputerInfoAsync, request);
                 name = respond.Info.Name;
                 ownerAccountId = respond.Info.Owner.ToGuid();
                 rootDirectoryId = respond.Info.RootDirectory.ToGuid();
@@ -110,16 +120,6 @@ namespace client.Api
             {
                 throw new NotFoundException();
             }
-        }
-
-        public IDirectory GetDirectoryById(Guid directoryId)
-        {
-            return new Directory(fileSystemClient, computerId, directoryId);
-        }
-
-        public IFile GetFileById(Guid fileId)
-        {
-            return new File(fileSystemClient, computerId, fileId);
         }
 
         public async Task<bool> IsDirectoryAsync(Guid id)
@@ -131,7 +131,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(fileSystemClient.FromIdToPathAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(fileSystemClient.FromIdToPathAsync, request);
                 return respond.IsDirectory;
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
@@ -158,7 +158,7 @@ namespace client.Api
             };
             try
             {
-                var respond = await VisualGrpc.InvokeAsync(fileSystemClient.FromIdToPathAsync, request);
+                var respond = await GrpcMiddleware.InvokeAsync(fileSystemClient.FromIdToPathAsync, request);
                 return respond.Path;
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)

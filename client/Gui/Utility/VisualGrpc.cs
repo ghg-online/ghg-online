@@ -57,7 +57,7 @@ namespace client.Gui
         /// Invoke a gRPC method and show a waiting dialog.
         /// </summary>
         /// <typeparam name="TRequest">Type name of your gRPC request</typeparam>
-        /// <typeparam name="TRespond">Type name of your gRPC respond</typeparam>
+        /// <typeparam name="TResponse">Type name of your gRPC respond</typeparam>
         /// <param name="func">Async version of your gRPC procedure, such as LoginAsync</param>
         /// <param name="request">The request you will send</param>
         /// <returns>A task that will contain your respond</returns>
@@ -74,9 +74,9 @@ namespace client.Gui
         /// </para>
         /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
         /// </remarks>
-        public static async Task<TRespond> InvokeAsync<TRequest, TRespond>(Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TRespond>> func, TRequest request)
+        public static async Task<TResponse> InvokeAsync<TRequest, TResponse>(Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>> func, TRequest request)
             where TRequest : IBufferMessage
-            where TRespond : IBufferMessage, new()
+            where TResponse : IBufferMessage, new()
         {
             return await InvokeAsync(func, request, 1000, -1);
         }
@@ -86,7 +86,7 @@ namespace client.Gui
         /// Invoke a gRPC method and show a waiting dialog.
         /// </summary>
         /// <typeparam name="TRequest">Type name of your gRPC request</typeparam>
-        /// <typeparam name="TRespond">Type name of your gRPC respond</typeparam>
+        /// <typeparam name="TResponse">Type name of your gRPC respond</typeparam>
         /// <param name="func">Async version of your gRPC procedure, such as LoginAsync</param>
         /// <param name="request">The request you will send</param>
         /// <returns>A task that will contain your respond</returns>
@@ -99,9 +99,9 @@ namespace client.Gui
         /// </remarks>
 
         // This function is added on 2023/10/05
-        public static TRespond Invoke<TRequest, TRespond>(Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TRespond>> func, TRequest request)
+        public static TResponse Invoke<TRequest, TResponse>(Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>> func, TRequest request)
             where TRequest : IBufferMessage
-            where TRespond : IBufferMessage, new()
+            where TResponse : IBufferMessage, new()
         {
             var task = InvokeAsync(func, request);
             try
@@ -119,7 +119,7 @@ namespace client.Gui
         /// Invoke a gRPC method, show a waiting dialog, and cancel the invoke automatically if timeout.
         /// </summary>
         /// <typeparam name="TRequest">Type name of your gRPC request</typeparam>
-        /// <typeparam name="TRespond">Type name of your gRPC respond</typeparam>
+        /// <typeparam name="TResponse">Type name of your gRPC respond</typeparam>
         /// <param name="func">Async version of your gRPC procedure, such as LoginAsync</param>
         /// <param name="request">The request you will send</param>
         /// <param name="showWait">How many milliseconds before the dialog is shown. Zero means immediately. Negative number means never.</param>
@@ -133,16 +133,16 @@ namespace client.Gui
         /// <remarks>
         /// <para>If you have called <c>LoadToken</c>, the token will be carried in your invoke by metadata (in http header)</para>
         /// </remarks>
-        public static async Task<TRespond> InvokeAsync<TRequest, TRespond>(
-            Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TRespond>> func,
+        public static async Task<TResponse> InvokeAsync<TRequest, TResponse>(
+            Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>> func,
             TRequest request,
             int showWait,
             int timeOut
         ) where TRequest : IBufferMessage
-            where TRespond : IBufferMessage, new()
+            where TResponse : IBufferMessage, new()
         {
             var handler = new InvokeHandler(showWait, timeOut);
-            TRespond respond = new();
+            TResponse respond = new();
             await handler.Invoke(async (cancellationToken) =>
             {
                 respond = await func(request, entries, null, cancellationToken);
@@ -154,7 +154,7 @@ namespace client.Gui
         /// Invoke a gRPC method, show a waiting dialog, and cancel the invoke automatically if timeout.
         /// </summary>
         /// <typeparam name="TRequest">Type name of your gRPC request</typeparam>
-        /// <typeparam name="TRespond">Type name of your gRPC respond</typeparam>
+        /// <typeparam name="TResponse">Type name of your gRPC respond</typeparam>
         /// <param name="func">Async version of your gRPC procedure, such as LoginAsync</param>
         /// <param name="request">The request you will send</param>
         /// <param name="showWait">How many milliseconds before the dialog is shown. Zero means immediately. Negative number means never.</param>
@@ -165,13 +165,13 @@ namespace client.Gui
         /// </remarks>
 
         // This function is added on 2023/10/05
-        public static TRespond Invoke<TRequest, TRespond>(
-            Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TRespond>> func,
+        public static TResponse Invoke<TRequest, TResponse>(
+            Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>> func,
             TRequest request,
             int showWait,
             int timeOut
         ) where TRequest : IBufferMessage
-            where TRespond : IBufferMessage, new()
+            where TResponse : IBufferMessage, new()
         {
             var task = InvokeAsync(func, request, showWait, timeOut);
             try

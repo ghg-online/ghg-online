@@ -1,4 +1,6 @@
-﻿namespace client.Api
+﻿using client.Api.Entity;
+
+namespace client.Api.Abstraction
 {
     public interface IDirectory : ISyncable
     {
@@ -26,5 +28,6 @@
         Task SyncBasicInfo();
         Task SyncChildDirectories();
         Task SyncChildFiles();
+        void UpdateCache(DirectoryInfoEntity info);
     }
 }

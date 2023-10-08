@@ -1,4 +1,6 @@
-﻿namespace client.Api
+﻿using client.Api.Entity;
+
+namespace client.Api.Abstraction
 {
     public interface IComputer : ISyncable
     {
@@ -6,12 +8,12 @@
         Guid OwnerAccountId { get; }
         Guid RootDirectoryId { get; }
         IDirectory RootDirectory { get; }
+        Guid ComputerId { get; }
 
         string FromIdToPath(Guid id);
         Task<string> FromIdToPathAsync(Guid id);
-        IDirectory GetDirectoryById(Guid directoryId);
-        IFile GetFileById(Guid fileId);
         bool IsDirectory(Guid id);
         Task<bool> IsDirectoryAsync(Guid id);
+        void UpdateCache(ComputerInfoEntity info);
     }
 }
