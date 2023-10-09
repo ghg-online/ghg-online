@@ -18,6 +18,7 @@ namespace client.Gui.Console
             Listen(cancellationTokenSource.Token);
             Enabled = true;
             KeyPress += (args) => { if (OnKeyPress(args.KeyEvent)) args.Handled = true; };
+            MouseClick += (args) => { if (OnMouseEventReceived(args.MouseEvent)) args.Handled = true; };
         }
 
         public void Run(Action<PipeStream> program)
@@ -70,13 +71,13 @@ namespace client.Gui.Console
                 var rune = input.EnumerateRunes().First();
                 if (false == System.Text.Rune.IsControl(rune))
                 {
-                    Application.Driver.Move(Frame.X + screen.CursorX, Frame.Y + screen.CursorY);
-                    var color = Application.Driver.MakeAttribute(
+                    Driver.Move(Frame.X + screen.CursorX, Frame.Y + screen.CursorY);
+                    var color = Driver.MakeAttribute(
                         screen.ForegroundColor.ToTermColor(),
                         screen.BackgroundColor.ToTermColor());
-                    Application.Driver.SetAttribute(color);
-                    Application.Driver.AddStr(input);
-                    Application.Driver.UpdateScreen();
+                    Driver.SetAttribute(color);
+                    Driver.AddStr(input);
+                    Driver.UpdateScreen();
                 }
                 pipeStream.Write(Encoding.UTF8.GetBytes(input), 0, input.Length);
                 return true;
@@ -85,6 +86,21 @@ namespace client.Gui.Console
             {
                 return false;
             }
+        }
+
+        public bool OnMouseEventReceived(MouseEvent mouseEvent)
+        {
+            if (mouseEvent.Flags == MouseFlags.WheeledUp)
+            {
+                screen.Scroll(-1);
+                return true;
+            }
+            if (mouseEvent.Flags == MouseFlags.WheeledDown)
+            {
+                screen.Scroll(1);
+                return true;
+            }
+            return false;
         }
     }
 }

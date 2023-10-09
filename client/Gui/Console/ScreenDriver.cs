@@ -22,7 +22,10 @@ namespace client.Gui.Console
 
         public int Height => height;
 
-        public void Redraw() { }
+        public void Redraw()
+        {
+            consoleScreen.Redraw(consoleScreen.Frame);
+        }
 
         public void Update(int x, int y, char c, SysColor foreground, SysColor background)
         {
