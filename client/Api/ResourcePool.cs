@@ -1,7 +1,6 @@
 ﻿using client.Api.Abstraction;
 using client.Api.Entity;
 using Grpc.Net.Client;
-using server.Protos;
 using static server.Protos.Account;
 using static server.Protos.Computer;
 using static server.Protos.FileSystem;

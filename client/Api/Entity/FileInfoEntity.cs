@@ -1,7 +1,4 @@
-﻿using server.Protos;
-using System.Runtime.CompilerServices;
-
-namespace client.Api.Entity
+﻿namespace client.Api.Entity
 {
     public struct FileInfoEntity
     {

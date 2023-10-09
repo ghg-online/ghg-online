@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using client.Utils;
 using Terminal.Gui;
 using Terminal.ScreenLibrary;

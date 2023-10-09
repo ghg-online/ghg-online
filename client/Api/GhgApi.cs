@@ -1,6 +1,5 @@
 ﻿using client.Api.Abstraction;
 using client.Api.GrpcMiddleware;
-using client.Gui;
 using client.Utils;
 using Grpc.Core;
 using Grpc.Net.Client;

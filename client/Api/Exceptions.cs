@@ -36,7 +36,7 @@
         public Guid GuidOfObject { get; }
         public Guid GuidInUpdateInfo { get; }
         public IllegalUpdateException(Type type, Guid guidOfObject, Guid guidInUpdateInfo)
-            :base("Guid of object not matching guid in update info when trying to update an object's data.")
+            : base("Guid of object not matching guid in update info when trying to update an object's data.")
         {
             Type = type;
             GuidOfObject = guidOfObject;

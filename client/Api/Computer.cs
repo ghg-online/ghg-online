@@ -1,7 +1,6 @@
 ﻿using client.Api.Abstraction;
 using client.Api.Entity;
 using client.Api.GrpcMiddleware;
-using client.Gui;
 using client.Utils;
 using Grpc.Core;
 using server.Protos;

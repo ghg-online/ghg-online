@@ -1,5 +1,4 @@
-﻿using client.Api;
-using client.Api.Abstraction;
+﻿using client.Api.Abstraction;
 using client.App.Abstraction;
 
 namespace client.App
