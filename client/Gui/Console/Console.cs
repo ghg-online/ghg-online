@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using client.Utils;
 using Terminal.Gui;
 using Terminal.ScreenLibrary;
@@ -67,6 +68,17 @@ namespace client.Gui.Console
             try
             {
                 string input = char.ConvertFromUtf32(keyEvent.KeyValue);
+                var rune = input.EnumerateRunes().First();
+                if (false == System.Text.Rune.IsControl(rune))
+                {
+                    Application.Driver.Move(Frame.X + screen.CursorX, Frame.Y + screen.CursorY);
+                    var color = Application.Driver.MakeAttribute(
+                        screen.ForegroundColor.ToTermColor(),
+                        screen.BackgroundColor.ToTermColor());
+                    Application.Driver.SetAttribute(color);
+                    Application.Driver.AddStr(input);
+                    Application.Driver.UpdateScreen();
+                }
                 pipeStream.Write(Encoding.UTF8.GetBytes(input), 0, input.Length);
                 return true;
             }

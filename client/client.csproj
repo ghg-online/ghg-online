@@ -21,7 +21,7 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0-preview2" />
     <PackageReference Include="Terminal.Gui" Version="1.15.0-pre.4" />
-    <PackageReference Include="Terminal.ScreenLibrary" Version="0.2.2-beta" />
+    <PackageReference Include="Terminal.ScreenLibrary" Version="0.2.3-beta" />
   </ItemGroup>
 
   <ItemGroup>

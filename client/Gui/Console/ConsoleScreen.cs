@@ -58,6 +58,7 @@ namespace client.Gui.Console
                 labels[x, y].Text = Char.ToString(value.Character);
                 labels[x, y].ColorScheme.Normal =
                     new(value.Foreground.ToTermColor(), value.Background.ToTermColor());
+                labels[x, y].SetNeedsDisplay();
             }
         }
 
