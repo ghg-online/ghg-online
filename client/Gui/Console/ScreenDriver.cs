@@ -1,4 +1,5 @@
-﻿using Terminal.ScreenLibrary;
+﻿using Terminal.Gui;
+using Terminal.ScreenLibrary;
 using SysColor = System.Drawing.Color;
 
 namespace client.Gui.Console
@@ -25,6 +26,7 @@ namespace client.Gui.Console
         public void Redraw()
         {
             consoleScreen.Redraw(consoleScreen.Frame);
+            View.Driver.Refresh();
         }
 
         public void Update(int x, int y, char c, SysColor foreground, SysColor background)

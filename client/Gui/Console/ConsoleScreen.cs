@@ -69,7 +69,7 @@ namespace client.Gui.Console
                         buffer.SetDirty(x, y, false);
                     }
             PositionCursor();
-            Driver.Refresh();
+            //Driver.Refresh();
         }
 
         public ScreenCell this[int x, int y]
@@ -91,8 +91,17 @@ namespace client.Gui.Console
 
         public override void PositionCursor()
         {
-            Move(cursorX, cursorY);
-            Application.Driver.SetCursorVisibility(cursorVisible ? CursorVisibility.Default : CursorVisibility.Invisible);
+            if (HasFocus)
+            {
+                Move(cursorX, cursorY);
+                Application.Driver.SetCursorVisibility(cursorVisible ? CursorVisibility.Default : CursorVisibility.Invisible);
+            }
+        }
+
+        public override bool OnLeave(View view)
+        {
+            Application.Driver.SetCursorVisibility(CursorVisibility.Invisible);
+            return true;
         }
     }
 }

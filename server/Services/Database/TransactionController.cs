@@ -69,7 +69,7 @@ namespace server.Services.Database
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Transaction failed with an exception.", state);
+                    logger.LogError(e, "Transaction failed with an exception.");
                     state = State.Error;
                     exception = e;
                 }
